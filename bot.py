@@ -2,7 +2,7 @@ import logging
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 
-# مقادیر ثابت
+# مقادیر
 CHANNEL_USERNAME = "@Mobile_Legend_Persian"
 PRICES = {
     'لجند': 1200000,
@@ -11,10 +11,10 @@ PRICES = {
     'کالکتور': 300000
 }
 
-# وضعیت‌ها
+# وضعیت گفتگو
 CHOOSE_SKIN, ENTER_QUANTITY = range(2)
 
-# بررسی عضویت در کانال
+# بررسی عضویت کاربر در کانال
 async def check_membership(user_id, context):
     try:
         member = await context.bot.get_chat_member(CHANNEL_USERNAME, user_id)
@@ -38,7 +38,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return CHOOSE_SKIN
 
-# انتخاب اسکین
+# انتخاب نوع اسکین
 async def choose_skin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     skin = update.message.text
     if skin not in PRICES:
@@ -62,11 +62,13 @@ async def enter_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return ConversationHandler.END
 
-# هندلر خطاها
+# هندلرهای خطا
 async def error(update, context):
     logging.warning(f'Update {update} caused error {context.error}')
 
-# اجرای ربات
+# تابع اصلی
+import asyncio
+
 async def main():
     TOKEN = "7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI"
     app = ApplicationBuilder().token(TOKEN).build()
@@ -86,6 +88,5 @@ async def main():
     print("ربات آماده اجراست...")
     await app.run_polling()
 
-# اجرای برنامه
-import asyncio
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
