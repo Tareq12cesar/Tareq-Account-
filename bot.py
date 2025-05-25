@@ -1,23 +1,18 @@
-import logging
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import (
-    ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes,
-    ConversationHandler, filters
-)
+from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ConversationHandler, ContextTypes, filters
 
-# مقادیر
+# اطلاعات اسکین‌ها و قیمت‌ها
 CHANNEL_USERNAME = "@Mobile_Legend_Persian"
 PRICES = {
     'لجند': 1200000,
     'کوف': 500000,
-    'انیمه ایی': 500000,
+    'آیتمه ایی': 500000,
     'کالکتور': 300000
 }
 
-# وضعیت گفتگو
-CHOOSE_SKIN, ENTER_QUANTITY = range(2)
+CHOOSE_SKIN, END_SELECTION = range(2)
 
-# بررسی عضویت کاربر در کانال
+# بررسی عضویت کاربر
 async def check_membership(user_id, context):
     try:
         member = await context.bot.get_chat_member(CHANNEL_USERNAME, user_id)
@@ -29,62 +24,66 @@ async def check_membership(user_id, context):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not await check_membership(user_id, context):
-        await update.message.reply_text(
-            f"لطفاً برای استفاده از ربات، اول عضو کانال {CHANNEL_USERNAME} بشو و بعد دکمه /start رو بزن."
-        )
+        await update.message.reply_text(f"اول عضو کانال {CHANNEL_USERNAME} شو و بعد دکمه رو بزن.")
         return ConversationHandler.END
+
+    # خالی کردن انتخاب‌های قبلی
+    context.user_data['selected_skins'] = []
 
     keyboard = [[KeyboardButton(skin)] for skin in PRICES.keys()]
     await update.message.reply_text(
-        "سلام! لطفاً نوع اسکینت رو انتخاب کن:",
-        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+        "سلام! لطفاً نوع اسکینت رو انتخاب کن.",
+        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=False, resize_keyboard=True)
     )
     return CHOOSE_SKIN
 
-# انتخاب نوع اسکین
+# انتخاب اسکین‌ها
 async def choose_skin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     skin = update.message.text
-    if skin not in PRICES:
-        await update.message.reply_text("لطفاً یکی از گزینه‌ها رو انتخاب کن.")
+    if skin in PRICES:
+        context.user_data['selected_skins'].append(skin)
+        await update.message.reply_text(
+            f"اسکین {skin} اضافه شد! میخوای ادامه بدی یا قیمت نهایی رو ببینی؟",
+            reply_markup=ReplyKeyboardMarkup([['ادامه', 'پایان']], one_time_keyboard=True, resize_keyboard=True)
+        )
+        return CHOOSE_SKIN
+    elif skin == 'پایان':
+        return await end_selection(update, context)
+    elif skin == 'ادامه':
+        keyboard = [[KeyboardButton(skin)] for skin in PRICES.keys()]
+        await update.message.reply_text(
+            "یک اسکین دیگه انتخاب کن:",
+            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=False, resize_keyboard=True)
+        )
+        return CHOOSE_SKIN
+    else:
+        await update.message.reply_text("لطفاً گزینه معتبر انتخاب کن.")
         return CHOOSE_SKIN
 
-    context.user_data['skin'] = skin
-    await update.message.reply_text(f"چند تا اسکین {skin} داری؟")
-    return ENTER_QUANTITY
+# محاسبه و نمایش قیمت نهایی
+async def end_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    skins = context.user_data.get('selected_skins', [])
+    if not skins:
+        await update.message.reply_text("هنوز هیچ اسکینی انتخاب نکردی!")
+        return ConversationHandler.END
 
-# وارد کردن تعداد اسکین
-async def enter_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        count = int(update.message.text)
-        skin = context.user_data['skin']
-        price = PRICES[skin] * count
-        await update.message.reply_text(f"جمع کل شما: {price:,} تومان\nبرای محاسبه جدید، /start رو بزن.")
-    except:
-        await update.message.reply_text("لطفاً عدد معتبر وارد کن.")
-        return ENTER_QUANTITY
-
+    total_price = sum(PRICES.get(s, 0) for s in skins)
+    await update.message.reply_text(
+        f"✅ اسکین‌هایی که انتخاب کردی:\n" + "\n".join(skins) + f"\n\nجمع کل قیمت: {total_price} سکه"
+    )
     return ConversationHandler.END
 
-# هندلرهای خطا
-async def error(update, context):
-    logging.warning(f'Update {update} caused error {context.error}')
+# ست کردن هندلرها
+app = ApplicationBuilder().token("7963209844:AAE2WtF6Gdo2vJkj96erXmN7CItDK4dmS4c").build()
 
-# اجرای برنامه
-if __name__ == "__main__":
-    TOKEN = "7963209844:AAE2WtF6Gdo2vJkj96erXmN7CItDK4dmS4c"
-    app = ApplicationBuilder().token(TOKEN).build()
+conv_handler = ConversationHandler(
+    entry_points=[CommandHandler("start", start)],
+    states={
+        CHOOSE_SKIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_skin)],
+    },
+    fallbacks=[CommandHandler("cancel", end_selection)]
+)
 
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
-        states={
-            CHOOSE_SKIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_skin)],
-            ENTER_QUANTITY: [MessageHandler(filters.TEXT & ~filters.COMMAND, enter_quantity)]
-        },
-        fallbacks=[CommandHandler('start', start)],
-    )
+app.add_handler(conv_handler)
 
-    app.add_handler(conv_handler)
-    app.add_error_handler(error)
-
-    print("ربات آماده اجراست...")
-    app.run_polling()
+app.run_polling()
