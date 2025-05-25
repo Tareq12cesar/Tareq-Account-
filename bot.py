@@ -69,8 +69,8 @@ async def enter_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def error(update, context):
     logging.warning(f'Update {update} caused error {context.error}')
 
-# تابع اصلی
-async def main():
+# اجرای برنامه
+if __name__ == "__main__":
     TOKEN = "7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI"
     app = ApplicationBuilder().token(TOKEN).build()
 
@@ -87,8 +87,4 @@ async def main():
     app.add_error_handler(error)
 
     print("ربات آماده اجراست...")
-    await app.run_polling()
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    app.run_polling()
