@@ -71,8 +71,9 @@ async def error(update, context):
 
 # اجرای ربات
 async def main():
-    TOKEN = " 7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI "
-    app = ApplicationBuilder().token("7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI").build()
+    TOKEN = "7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI"
+    app = ApplicationBuilder().token(TOKEN).build()
+
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
@@ -86,9 +87,6 @@ async def main():
     app.add_error_handler(error)
 
     print("ربات آماده اجراست...")
-await (app.run_polling)
 
-import asyncio
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    # این خط باید داخل main باشه، دقیقا همینجا:
+    await app.run_polling()
