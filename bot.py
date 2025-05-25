@@ -100,7 +100,7 @@ async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 # تنظیم هندلرها
-app = ApplicationBuilder().token("7963209844:AAE2WtF6Gdo2vJkj96erXmN7CItDK4dmS4c").build()
+app = ApplicationBuilder().token("7963209844:AAEj88GpiNB_xMrbTuxDHfvDN6jLXb5hBEw").build()
 
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler("start", start)],
