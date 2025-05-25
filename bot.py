@@ -74,7 +74,7 @@ async def end_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 # ست کردن هندلرها
-app = ApplicationBuilder().token("توکن بات").build()
+app = ApplicationBuilder().token("7963209844:AAE2WtF6Gdo2vJkj96erXmN7CItDK4dmS4c").build()
 
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler("start", start)],
