@@ -72,6 +72,7 @@ import asyncio
 async def main():
     TOKEN = "7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI"
     app = ApplicationBuilder().token("7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI").build()
+    asyncio.run(app.run_polling())
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
@@ -90,4 +91,3 @@ async def main():
 import asyncio
 
 if __name__ == "__main__":
-    asyncio.run(app.run_polling())
