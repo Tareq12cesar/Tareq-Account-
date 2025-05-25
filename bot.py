@@ -63,16 +63,14 @@ async def enter_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 # هندلرهای خطا
-async def error(update, context):
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.warning(f'Update {update} caused error {context.error}')
 
 # تابع اصلی
-import asyncio
-
 async def main():
-    TOKEN = "7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI"
-    app = ApplicationBuilder().token("7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI").build()
-    asyncio.run(app.run_polling())
+    TOKEN = "7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI"  # توکن رباتت رو اینجا بذار
+    app = ApplicationBuilder().token(TOKEN).build()
+
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
@@ -83,11 +81,11 @@ async def main():
     )
 
     app.add_handler(conv_handler)
-    app.add_error_handler(error)
+    app.add_error_handler(error_handler)
 
     print("ربات آماده اجراست...")
-    app.run_polling()
-
-import asyncio
+    await app.run_polling()
 
 if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
