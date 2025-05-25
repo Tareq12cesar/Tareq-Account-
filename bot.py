@@ -1,4 +1,4 @@
-l LL import logging
+ LL import logging
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 
@@ -84,8 +84,10 @@ async def main():
     app.add_error_handler(error)
 
     print("ربات آماده اجراست...")
+    
+import asyncio
+
+async def main():
     await app.run_polling()
 
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+asyncio.run(main())
