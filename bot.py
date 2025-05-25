@@ -84,10 +84,8 @@ async def main():
     app.add_error_handler(error)
 
     print("ربات آماده اجراست...")
-
-await app.run_polling()
+    await app.run_polling()
 
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
-
