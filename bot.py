@@ -69,7 +69,7 @@ async def error(update, context):
 # تابع اصلی
 async def main():
     TOKEN = "7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI"
-    app = ApplicationBuilder().token(TOKEN).build()
+    app = ApplicationBuilder().token(7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI).build()
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
