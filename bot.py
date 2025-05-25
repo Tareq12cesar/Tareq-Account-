@@ -3,7 +3,7 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 
 # مقادیر
-CHANNEL_USERNAME = "@YourChannelUsername"  # آیدی کانالت رو اینجا بذار
+CHANNEL_USERNAME = "@Mobile_Legend_Persian"  # آیدی کانالت رو اینجا بذار
 PRICES = {
     'لجند': 1200000,
     'کوف': 500000,
@@ -30,7 +30,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not await check_membership(user_id, context):
         await update.message.reply_text(
-            f"@لطفاً برای استفاده از ربات اول عضو کانال {Mobile_Legend_Persian} بشو و بعد دکمه /start رو بزن."
+            f"لطفاً برای استفاده از ربات اول عضو کانال Mobile_Legend_Persian بشو و بعد دکمه /start رو بزن."
         )
         return ConversationHandler.END
 
