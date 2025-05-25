@@ -100,5 +100,10 @@ async def main():
     )
 
     app.add_handler(conv_handler)
+    app.add_error_handler(error)
 
-app.run_polling()
+    print("ربات آماده اجراست...")
+    await app.run_polling()
+
+if name == "main":
+    main()
