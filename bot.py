@@ -71,7 +71,7 @@ async def error(update, context):
 
 # اجرای برنامه
 if __name__ == "__main__":
-    TOKEN = "7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI"
+    TOKEN = "7963209844:AAE2WtF6Gdo2vJkj96erXmN7CItDK4dmS4c"
     app = ApplicationBuilder().token(TOKEN).build()
 
     conv_handler = ConversationHandler(
