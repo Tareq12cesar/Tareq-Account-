@@ -6,9 +6,9 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 CHANNEL_USERNAME = "@YourChannelUsername"  # آیدی کانالت رو اینجا بذار
 PRICES = {
     'لجند': 1200000,
-    'کالکتور': 500000,
-    'اپیک': 300000,
-    'اسپشیال': 200000
+    'کوف': 500000,
+    'انیمه ایی': 500000,
+    'کالکتور': 300000
 }
 
 # وضعیت گفتگو
@@ -71,7 +71,7 @@ async def error(update, context):
 
 # اجرای ربات
 async def main():
-    TOKEN = "توکن رباتت اینجا"
+    TOKEN = " 7878818515:AAG5YA_Yu4oEMNLdwZ_nHEGTb-KOPe82NyM "
     app = ApplicationBuilder().token(TOKEN).build()
 
     conv_handler = ConversationHandler(
