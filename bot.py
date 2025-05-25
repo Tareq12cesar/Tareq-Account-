@@ -2,7 +2,7 @@ import logging
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 
-# مقادیر
+# مقادیر ثابت
 CHANNEL_USERNAME = "@Mobile_Legend_Persian"
 PRICES = {
     'لجند': 1200000,
@@ -11,10 +11,10 @@ PRICES = {
     'کالکتور': 300000
 }
 
-# وضعیت گفتگو
+# وضعیت‌ها
 CHOOSE_SKIN, ENTER_QUANTITY = range(2)
 
-# بررسی عضویت کاربر در کانال
+# بررسی عضویت در کانال
 async def check_membership(user_id, context):
     try:
         member = await context.bot.get_chat_member(CHANNEL_USERNAME, user_id)
@@ -27,7 +27,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not await check_membership(user_id, context):
         await update.message.reply_text(
-            f"لطفاً برای استفاده از ربات اول عضو کانال Mobile_Legend_Persian بشو و بعد دکمه /start رو بزن."
+            f"لطفاً برای استفاده از ربات اول عضو کانال {CHANNEL_USERNAME} بشو و بعد دکمه /start رو بزن."
         )
         return ConversationHandler.END
 
@@ -38,7 +38,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return CHOOSE_SKIN
 
-# انتخاب نوع اسکین
+# انتخاب اسکین
 async def choose_skin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     skin = update.message.text
     if skin not in PRICES:
@@ -62,14 +62,15 @@ async def enter_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return ConversationHandler.END
 
-# هندلرهای خطا
+# هندلر خطاها
 async def error(update, context):
     logging.warning(f'Update {update} caused error {context.error}')
 
-# تابع اصلی
+# اجرای ربات
 async def main():
     TOKEN = "7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI"
-    app = ApplicationBuilder().token("7963209844:AAGiui4s7GpojRgFj5zFKVtIgdA3zgQgI").build()
+    app = ApplicationBuilder().token(TOKEN).build()
+
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
@@ -83,10 +84,8 @@ async def main():
     app.add_error_handler(error)
 
     print("ربات آماده اجراست...")
-    
-import asyncio
-
-async def main():
     await app.run_polling()
 
+# اجرای برنامه
+import asyncio
 asyncio.run(main())
