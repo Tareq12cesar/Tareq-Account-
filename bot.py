@@ -1,12 +1,8 @@
-import logging
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import (
-    ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes,
-    ConversationHandler, filters
-)
+from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ConversationHandler, ContextTypes, filters
 
+# اطلاعات اسکین‌ها و قیمت‌ها
 CHANNEL_USERNAME = "@Mobile_Legend_Persian"
-
 PRICES = {
     'لجند': 1200000,
     'کوف': 500000,
@@ -15,8 +11,9 @@ PRICES = {
     'لاکی باکس': 300000
 }
 
-CHOOSE_SKIN, ENTER_QUANTITY, CONFIRM_ANOTHER = range(3)
+CHOOSE_SKIN, ENTER_QUANTITY = range(2)
 
+# بررسی عضویت کاربر
 async def check_membership(user_id, context):
     try:
         member = await context.bot.get_chat_member(CHANNEL_USERNAME, user_id)
@@ -24,15 +21,15 @@ async def check_membership(user_id, context):
     except:
         return False
 
+# شروع ربات
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not await check_membership(user_id, context):
-        await update.message.reply_text(
-            f"لطفاً برای استفاده از ربات، اول عضو کانال {CHANNEL_USERNAME} شو و بعد /start رو بزن."
-        )
+        await update.message.reply_text(f"لطفاً اول عضو کانال {CHANNEL_USERNAME} شو و بعد دکمه رو بزن.")
         return ConversationHandler.END
 
     context.user_data['skins'] = {}
+
     keyboard = [[KeyboardButton(skin)] for skin in PRICES.keys()]
     await update.message.reply_text(
         "سلام! لطفاً نوع اسکینت رو انتخاب کن:",
@@ -40,70 +37,65 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return CHOOSE_SKIN
 
+# انتخاب نوع اسکین
 async def choose_skin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     skin = update.message.text
-    if skin not in PRICES:
+    if skin in PRICES:
+        context.user_data['current_skin'] = skin
+        await update.message.reply_text(f"چند تا {skin} داری؟")
+        return ENTER_QUANTITY
+    else:
         await update.message.reply_text("لطفاً یکی از گزینه‌ها رو انتخاب کن.")
         return CHOOSE_SKIN
 
-    context.user_data['current_skin'] = skin
-    await update.message.reply_text(f"چند تا اسکین {skin} داری؟")
-    return ENTER_QUANTITY
-
+# وارد کردن تعداد اسکین
 async def enter_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        count = int(update.message.text)
+        quantity = int(update.message.text)
         skin = context.user_data['current_skin']
-        context.user_data['skins'][skin] = count
-        await update.message.reply_text("میخوای نوع دیگه‌ای از اسکین‌ها رو هم وارد کنی؟ (بله/خیر)")
-        return CONFIRM_ANOTHER
+        context.user_data['skins'][skin] = quantity
+
+        keyboard = [[KeyboardButton(skin)] for skin in PRICES.keys()] + [[KeyboardButton("پایان")]]
+        await update.message.reply_text(
+            "نوع اسکین بعدی رو انتخاب کن یا پایان رو بزن:",
+            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+        )
+        return CHOOSE_SKIN
     except:
         await update.message.reply_text("لطفاً عدد معتبر وارد کن.")
         return ENTER_QUANTITY
 
-async def confirm_another(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    answer = update.message.text.lower()
-    if answer in ['بله', 'آره', 'yes']:
-        keyboard = [[KeyboardButton(skin)] for skin in PRICES.keys()]
-        await update.message.reply_text(
-            "نوع اسکین بعدی رو انتخاب کن:",
-            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
-        )
-        return CHOOSE_SKIN
-    else:
-        total_price = 0
-        details = ""
-        for skin, count in context.user_data['skins'].items():
-            price = PRICES[skin] * count
-            total_price += price
-            details += f"{skin} × {count} = {price:,} تومان\n"
-        await update.message.reply_text(
-            f"خلاصه قیمت‌ها:\n\n{details}\nجمع کل: {total_price:,} تومان\nبرای شروع مجدد /start رو بزن."
-        )
+# نمایش نتیجه نهایی
+async def end_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    skins = context.user_data.get('skins', {})
+    if not skins:
+        await update.message.reply_text("هیچ اسکینی انتخاب نکردی!")
         return ConversationHandler.END
 
-async def error(update, context):
-    logging.warning(f'Update {update} caused error {context.error}')
+    total_price = 0
+    details = ""
+    for skin, count in skins.items():
+        price = PRICES[skin] * count
+        total_price += price
+        details += f"{skin}: {count}\n"
 
-async def main():
-    TOKEN = "7963209844:AAE2WtF6Gdo2vJkj96erXmN7CItDK4dmS4c"
-    app = ApplicationBuilder().token(TOKEN).build()
-
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
-        states={
-            CHOOSE_SKIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_skin)],
-            ENTER_QUANTITY: [MessageHandler(filters.TEXT & ~filters.COMMAND, enter_quantity)],
-            CONFIRM_ANOTHER: [MessageHandler(filters.TEXT & ~filters.COMMAND, confirm_another)]
-        },
-        fallbacks=[CommandHandler('start', start)],
+    await update.message.reply_text(
+        f"✅ خلاصه انتخاب‌ها:\n\n{details}\nجمع کل: {total_price:,} تومان"
     )
+    return ConversationHandler.END
 
-    app.add_handler(conv_handler)
-    app.add_error_handler(error)
+# ست کردن هندلرها
+app = ApplicationBuilder().token("7963209844:AAE2WtF6Gdo2vJkj96erXmN7CItDK4dmS4c").build()
 
-    print("ربات آماده اجراست...")
-    await app.run_polling()
+conv_handler = ConversationHandler(
+    entry_points=[CommandHandler("start", start)],
+    states={
+        CHOOSE_SKIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_skin)],
+        ENTER_QUANTITY: [MessageHandler(filters.TEXT & ~filters.COMMAND, enter_quantity)],
+    },
+    fallbacks=[MessageHandler(filters.Regex('^پایان$'), end_selection)]
+)
 
-if name == "main":
-    main()
+app.add_handler(conv_handler)
+
+app.run_polling()
