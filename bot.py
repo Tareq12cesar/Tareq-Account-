@@ -72,7 +72,7 @@ async def error(update, context):
 # اجرای ربات
 async def main():
     TOKEN = " 7878818515:AAG5YA_Yu4oEMNLdwZ_nHEGTb-KOPe82NyM "
-    app = ApplicationBuilder().token("7878818515:AAGSYA-Yu4oEMNLdwZ_nHEGTb-KOPe82NyM").build()
+    app = ApplicationBuilder().token("7878818515:AAG5YA_Yu4oEMNLdwZ_nHEGTb-KOPe82NyM").build()
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
