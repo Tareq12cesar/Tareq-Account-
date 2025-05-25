@@ -85,9 +85,5 @@ async def main():
 
     print("ربات آماده اجراست...")
 
-    # این خط باید داخل main باشه:
-    await (app.run_polling)
-import asyncio
 
-if __name__ == "__main__":
-    asyncio.run(app.run_polling()
+await app.run_polling()
