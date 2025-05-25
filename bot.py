@@ -3,7 +3,7 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 
 # مقادیر
-CHANNEL_USERNAME = "@Mobile_Legend_Persian"  # آیدی کانالت رو اینجا بذار
+CHANNEL_USERNAME = "@Mobile_Legend_Persian"
 PRICES = {
     'لجند': 1200000,
     'کوف': 500000,
@@ -13,9 +13,6 @@ PRICES = {
 
 # وضعیت گفتگو
 CHOOSE_SKIN, ENTER_QUANTITY = range(2)
-
-# ذخیره موقتی اطلاعات کاربر
-user_data = {}
 
 # بررسی عضویت کاربر در کانال
 async def check_membership(user_id, context):
@@ -69,7 +66,7 @@ async def enter_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def error(update, context):
     logging.warning(f'Update {update} caused error {context.error}')
 
-# اجرای ربات
+# تابع اصلی
 async def main():
     TOKEN = "7963209844:AAGiui44s7GpojRgfPj5zFKVtIgdA3zgQgI"
     app = ApplicationBuilder().token(TOKEN).build()
@@ -88,5 +85,11 @@ async def main():
 
     print("ربات آماده اجراست...")
 
-    # این خط باید داخل main باشه، دقیقا همینجا:
+    # این خط باید داخل main باشه:
     await app.run_polling()
+
+
+import asyncio
+
+if __name__ == "__main__":
+    asyncio.run(main())
