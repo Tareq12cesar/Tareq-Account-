@@ -30,7 +30,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not await check_membership(user_id, context):
         await update.message.reply_text(
-            f"لطفاً برای استفاده از ربات اول عضو کانال {@Mobile_Legend_Persian} بشو و بعد دکمه /start رو بزن."
+            f"@لطفاً برای استفاده از ربات اول عضو کانال {Mobile_Legend_Persian} بشو و بعد دکمه /start رو بزن."
         )
         return ConversationHandler.END
 
