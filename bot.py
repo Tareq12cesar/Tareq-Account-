@@ -138,7 +138,7 @@ async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
         summary += f"{skin} {count}\n"
         total_price += price
 
-    keyboard = [[InlineKeyboardButton("آگهی کردن اکانتت و خرید و فروش", url="https://t.me/Tareq_Cesar_Trade")]]
+    keyboard = [[InlineKeyboardButton("برای آگهی کردن کلیک کنید", url="https://t.me/Tareq_Cesar_Trade")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text(
