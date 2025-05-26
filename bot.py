@@ -138,10 +138,15 @@ async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
         summary += f"{skin} {count}\n"
         total_price += price
 
+    keyboard = [[InlineKeyboardButton("آگهی کردن اکانتت و خرید و فروش", url="https://t.me/Tareq_Cesar_Trade")]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
     await update.message.reply_text(
-        f"✅ اسکین‌هایی که انتخاب کردی:\n{summary}\nقیمت کل: {total_price:,} تومان\n\nبرای شروع دوباره /start رو بزن."
+        f"✅ اسکین‌هایی که انتخاب کردی:\n{summary}\nقیمت کل: {total_price:,} تومان",
+        reply_markup=reply_markup
     )
 
+    await update.message.reply_text("برای شروع دوباره /start رو بزن.")
     return ConversationHandler.END
 
 app = ApplicationBuilder().token("7963209844:AAG03aE50l2ljMAH604M1sT1a3IHU85o3fs").build()
