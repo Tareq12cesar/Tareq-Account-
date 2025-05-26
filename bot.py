@@ -18,16 +18,19 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Cal
 CHANNEL_USERNAME = "@Mobile_Legend_Persian"
 
 PRICES = {
-    'لجند': 1200000,
-    'کوف': 500000,
-    'ایونتی': 500000,
-    'کالکتور': 300000,
-    'لاکی باکس': 300000
+    'Supreme': 1500000,
+    'Grand': 500000,
+    'Exquisite': 300000
+}
+
+EXPLANATIONS = {
+    'Supreme': "این دسته شامل باارزش‌ترین اسکین‌های بازیه که با تایپ **لجند** تو بازی هستن.\nچندتا اسکین از این دسته داری؟",
+    'Grand': "این دسته اسکین‌های پرطرفداری داره، شامل **کوف، جوجوتسو، سوپر هیرو، استاروارز، ناروتو، ابیس** و... هستن.\nتو کالکشن، قسمت **گرند** می‌تونید چک کنید.\nچندتا اسکین از این دسته داری؟",
+    'Exquisite': "این دسته شامل اسکین‌های **کالکتور، لاکی باکس** و **کلادز** می‌باشد.\nچندتا اسکین از این دسته داری؟"
 }
 
 CHOOSE_SKIN, CONFIRM_END = range(2)
 
-# بررسی عضویت کاربر
 async def check_membership(user_id, context):
     try:
         member = await context.bot.get_chat_member(CHANNEL_USERNAME, user_id)
@@ -35,7 +38,6 @@ async def check_membership(user_id, context):
     except:
         return False
 
-# چک عضویت با دکمه "عضوشدم | فعال‌سازی"
 async def check_membership_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -57,7 +59,6 @@ async def check_membership_button(update: Update, context: ContextTypes.DEFAULT_
             reply_markup=reply_markup
         )
 
-# شروع ربات
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not await check_membership(user_id, context):
@@ -82,7 +83,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return CHOOSE_SKIN
 
-# انتخاب اسکین‌ها
 async def choose_skin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
@@ -94,10 +94,9 @@ async def choose_skin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return CHOOSE_SKIN
 
     context.user_data['current_skin'] = text
-    await update.message.reply_text(f"چند تا از اسکین {text} داری؟")
+    await update.message.reply_text(EXPLANATIONS[text])
     return CONFIRM_END
 
-# گرفتن تعداد
 async def confirm_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         count = int(update.message.text)
@@ -123,7 +122,6 @@ async def confirm_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("لطفاً یک عدد معتبر وارد کن.")
         return CONFIRM_END
 
-# نمایش خلاصه
 async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     skins = context.user_data.get('skins', {})
     if not skins:
@@ -144,7 +142,6 @@ async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return ConversationHandler.END
 
-# تنظیم هندلرها
 app = ApplicationBuilder().token("7963209844:AAEj88GpiNB_xMrbTuxDHfvDN6jLXb5hBEw").build()
 
 conv_handler = ConversationHandler(
@@ -156,8 +153,8 @@ conv_handler = ConversationHandler(
     fallbacks=[CommandHandler("start", start)]
 )
 
-# هندلر دکمه چک عضویت
 app.add_handler(conv_handler)
 app.add_handler(CallbackQueryHandler(check_membership_button, pattern="check_membership"))
 
 app.run_polling()
+        
