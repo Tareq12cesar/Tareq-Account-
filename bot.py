@@ -24,8 +24,8 @@ PRICES = {
 }
 
 EXPLANATIONS = {
-    'Supreme': "این دسته شامل باارزش‌ترین اسکین‌های بازیه که با تایپ **لجند** تو بازی هستن.\nچندتا اسکین از این دسته داری؟",
-    'Grand': "این دسته اسکین‌های پرطرفداری داره، شامل **کوف، جوجوتسو، سوپر هیرو، استاروارز، ناروتو، ابیس** و... هستن.\nتو کالکشن، قسمت **گرند** می‌تونید چک کنید.\nچندتا اسکین از این دسته داری؟",
+    'Supreme': "این دسته شامل اسکین‌های **لجند** می‌باشد.\nچندتا اسکین از این دسته داری؟",
+    'Grand': "این دسته شامل اسکین‌های **کوف، جوجوتسو، سوپر هیرو، استاروارز، ناروتو، ابیس و...** هستن.\nتو کالکشن، قسمت **گرند** می‌تونید چک کنید.\nچندتا اسکین از این دسته داری؟",
     'Exquisite': "این دسته شامل اسکین‌های **کالکتور، لاکی باکس** و **کلادز** می‌باشد.\nچندتا اسکین از این دسته داری؟"
 }
 
@@ -45,7 +45,9 @@ async def check_membership_button(update: Update, context: ContextTypes.DEFAULT_
     user_id = query.from_user.id
     if await check_membership(user_id, context):
         await query.edit_message_text(
-            "✅ عضویت شما تایید شد! حالا می‌تونی از ربات استفاده کنی.\n\nبرای شروع، دکمه /start رو بزن."
+            "✅ عضویت شما تایید شد! حالا می‌تونی از ربات استفاده کنی.\n"
+            "توجه: اسکین‌های رایگان مثل **کوف کارینا** و... رو حساب نکنید چون ارزش خاصی ندارن.\n\n"
+            "بعد از مطالعه، دکمه /start رو بزن و ادامه بده."
         )
     else:
         keyboard = [
@@ -142,7 +144,7 @@ async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return ConversationHandler.END
 
-app = ApplicationBuilder().token("7963209844:AAEj88GpiNB_xMrbTuxDHfvDN6jLXb5hBEw").build()
+app = ApplicationBuilder().token("7963209844:AAG03aE50l2ljMAH604M1sT1a3IHU85o3fs").build()
 
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler("start", start)],
@@ -157,4 +159,3 @@ app.add_handler(conv_handler)
 app.add_handler(CallbackQueryHandler(check_membership_button, pattern="check_membership"))
 
 app.run_polling()
-        
