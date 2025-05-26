@@ -12,8 +12,8 @@ def run():
 
 threading.Thread(target=run).start()
 
-from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ConversationHandler, ContextTypes, filters
+from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ConversationHandler, ContextTypes, filters
 
 CHANNEL_USERNAME = "@Mobile_Legend_Persian"
 
@@ -35,11 +35,42 @@ async def check_membership(user_id, context):
     except:
         return False
 
+# چک عضویت با دکمه "عضوشدم | فعال‌سازی"
+async def check_membership_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    user_id = query.from_user.id
+    if await check_membership(user_id, context):
+        await query.edit_message_text(
+            "✅ عضویت شما تایید شد! حالا می‌تونی از ربات استفاده کنی.\n\nبرای شروع، دکمه /start رو بزن."
+        )
+    else:
+        keyboard = [
+            [InlineKeyboardButton("عضویت در کانال", url=f"https://t.me/{CHANNEL_USERNAME[1:]}")],
+            [InlineKeyboardButton("عضوشدم | فعال‌سازی", callback_data="check_membership")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+            f"⛔️ هنوز عضو کانال نشدی!\n\nلطفاً روی دکمه زیر کلیک کن و بعد دوباره دکمه 'عضوشدم | فعال‌سازی' رو بزن.",
+            reply_markup=reply_markup
+        )
+
 # شروع ربات
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not await check_membership(user_id, context):
-        await update.message.reply_text(f"اول عضو کانال {CHANNEL_USERNAME} شو و بعد دکمه /start رو بزن.")
+        keyboard = [
+            [InlineKeyboardButton("عضویت در کانال", url=f"https://t.me/{CHANNEL_USERNAME[1:]}")],
+            [InlineKeyboardButton("عضوشدم | فعال‌سازی", callback_data="check_membership")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await update.message.reply_text(
+            "برای استفاده از ربات لطفاً عضو کانال زیر شوید:",
+            reply_markup=reply_markup
+        )
         return ConversationHandler.END
 
     context.user_data['skins'] = {}
@@ -125,6 +156,8 @@ conv_handler = ConversationHandler(
     fallbacks=[CommandHandler("start", start)]
 )
 
+# هندلر دکمه چک عضویت
 app.add_handler(conv_handler)
+app.add_handler(CallbackQueryHandler(check_membership_button, pattern="check_membership"))
 
 app.run_polling()
