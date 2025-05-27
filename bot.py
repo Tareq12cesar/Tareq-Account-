@@ -152,14 +152,10 @@ async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text(
-        f"✅ اسکین‌هایی که انتخاب کردی:\n{summary}\nقیمت کل: {total_price:,} تومان",
-        reply_markup=reply_markup
-    )
-
-    # متن دلخواه اضافه شده
-    await update.message.reply_text(
+        f"✅ اسکین‌هایی که انتخاب کردی:\n{summary}\nقیمت کل: {total_price:,} تومان\n\n"
         "قیمت بالا ارزش اکانت شماست\n"
-        "برای ثبت آگهی تو کانال قیمت فروش رو خودتون تعیین می‌کنید"
+        "برای ثبت آگهی تو کانال قیمت فروش رو خودتون تعیین می‌کنید",
+        reply_markup=reply_markup
     )
 
     await update.message.reply_text("برای شروع دوباره /start رو بزن.")
