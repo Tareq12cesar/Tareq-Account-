@@ -156,6 +156,12 @@ async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
+    # متن دلخواه اضافه شده
+    await update.message.reply_text(
+        "قیمت بالا ارزش اکانت شماست\n"
+        "برای ثبت آگهی تو کانال قیمت فروش رو خودتون تعیین می‌کنید"
+    )
+
     await update.message.reply_text("برای شروع دوباره /start رو بزن.")
     return ConversationHandler.END
 
