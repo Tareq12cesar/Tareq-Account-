@@ -18,16 +18,16 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Cal
 CHANNEL_USERNAME = "@Mobile_Legend_Persian"
 
 PRICES = {
-    'Supreme': 1500000,
+    'Supreme': 1200000,
     'Grand': 500000,
     'Exquisite': 300000
 }
 
 EXPLANATIONS = {
-    'Supreme': "این دسته شامل اسکین‌های **لجند** می‌باشد.\nچندتا اسکین از این دسته داری؟",
-    'Grand': "این دسته شامل اسکین‌های **کوف، جوجوتسو، سوپر هیرو، استاروارز، ناروتو، ابیس و...** هستن.\nتو کالکشن، قسمت **گرند** می‌تونید چک کنید.\nچندتا اسکین از این دسته داری؟",
-    'Exquisite': "این دسته شامل اسکین‌های **کالکتور، لاکی باکس** و **کلادز** می‌باشد.\nچندتا اسکین از این دسته داری؟",
-    'Deluxe': "این دسته شامل زودیاک، لایتبورن، اپیک شاپ و... می‌باشد.\nچندتا اسکین از این دسته داری؟"
+    'Supreme': "✅ این دسته شامل اسکین‌های لجند می‌باشد.\n\nچندتا اسکین از این دسته داری؟",
+    'Grand': "✅ این دسته شامل اسکین‌های کوف، جوجوتسو، سوپر هیرو، استاروارز، ناروتو، ابیس و... می‌باشد.\n❌ توجه داشته باشید اسکین‌های رایگان این دسته مثل کارینا، تاموز، فلورین، راجر و... رو حساب نکنید.\n\nچندتا اسکین از این دسته داری؟",
+    'Exquisite': "✅ این دسته شامل اسکین‌های کالکتور، لاکی باکس و کلادز می‌باشد.\n❌ توجه داشته باشید اسکین‌های رایگان این دسته مثل ناتالیا و... رو حساب نکنید.\n\nچندتا اسکین از این دسته داری؟",
+    'Deluxe': "✅ این دسته شامل اسکین‌های زودیاک، لایتبورن، اپیک شاپ و... می‌باشد.\n\nچندتا اسکین از این دسته داری؟"
 }
 
 CHOOSE_SKIN, CONFIRM_END = range(2)
@@ -78,18 +78,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     context.user_data['skins'] = {}
-    context.user_data['prices'] = {}
 
-    keyboard = [
-        [KeyboardButton("Supreme")],
-        [KeyboardButton("Grand")],
-        [KeyboardButton("Exquisite")],
-        [KeyboardButton("Deluxe")],
-        [KeyboardButton("پایان")]
-    ]
+    keyboard = [[KeyboardButton(skin)] for skin in ['Supreme', 'Grand', 'Exquisite', 'Deluxe']]
     await update.message.reply_text(
         "سلام! لطفاً نوع اسکینت رو انتخاب کن.",
-        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=False, resize_keyboard=True)
+        reply_markup=ReplyKeyboardMarkup(keyboard + [['پایان']], one_time_keyboard=False, resize_keyboard=True)
     )
     return CHOOSE_SKIN
 
@@ -99,7 +92,7 @@ async def choose_skin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == 'پایان':
         return await show_summary(update, context)
 
-    if text not in EXPLANATIONS:
+    if text not in PRICES and text != 'Deluxe':
         await update.message.reply_text("لطفاً یکی از اسکین‌های موجود یا گزینه 'پایان' رو انتخاب کن.")
         return CHOOSE_SKIN
 
@@ -112,7 +105,37 @@ async def confirm_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
         count = int(update.message.text)
         skin = context.user_data['current_skin']
 
-        if skin == "Deluxe":
+        if skin in context.user_data['skins']:
+            context.user_data['skins'][skin] += count
+        else:
+            context.user_data['skins'][skin] = count
+
+        await update.message.reply_text(
+            f"✅ اسکین {skin} با تعداد {count} اضافه شد! برای ادامه انتخاب کن یا 'پایان' رو بزن."
+        )
+
+        keyboard = [[KeyboardButton(skin)] for skin in ['Supreme', 'Grand', 'Exquisite', 'Deluxe']]
+        await update.message.reply_text(
+            "یک اسکین دیگه انتخاب کن یا 'پایان' رو بزن:",
+            reply_markup=ReplyKeyboardMarkup(keyboard + [['پایان']], one_time_keyboard=False, resize_keyboard=True)
+        )
+
+        return CHOOSE_SKIN
+    except:
+        await update.message.reply_text("لطفاً یک عدد معتبر وارد کن.")
+        return CONFIRM_END
+
+async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    skins = context.user_data.get('skins', {})
+    if not skins:
+        await update.message.reply_text("هنوز هیچ اسکینی انتخاب نکردی!")
+        return ConversationHandler.END
+
+    summary = ""
+    total_price = 0
+
+    for skin, count in skins.items():
+        if skin == 'Deluxe':
             if count < 20:
                 price = count * 25000
             elif 20 <= count <= 40:
@@ -122,44 +145,7 @@ async def confirm_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             price = PRICES[skin] * count
 
-        context.user_data['skins'][skin] = count
-        context.user_data['prices'][skin] = price
-
-        await update.message.reply_text(
-            f"✅ اسکین {skin} با تعداد {count} و قیمت {price:,} تومان اضافه شد!"
-        )
-
-        keyboard = [
-            [KeyboardButton("Supreme")],
-            [KeyboardButton("Grand")],
-            [KeyboardButton("Exquisite")],
-            [KeyboardButton("Deluxe")],
-            [KeyboardButton("پایان")]
-        ]
-        await update.message.reply_text(
-            "یک اسکین دیگه انتخاب کن یا 'پایان' رو بزن:",
-            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=False, resize_keyboard=True)
-        )
-
-        return CHOOSE_SKIN
-
-    except:
-        await update.message.reply_text("لطفاً یک عدد معتبر وارد کن.")
-        return CONFIRM_END
-
-async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    skins = context.user_data.get('skins', {})
-    prices = context.user_data.get('prices', {})
-    if not skins:
-        await update.message.reply_text("هنوز هیچ اسکینی انتخاب نکردی!")
-        return ConversationHandler.END
-
-    summary = ""
-    total_price = 0
-
-    for skin, count in skins.items():
-        price = prices.get(skin, 0)
-        summary += f"{skin} - تعداد: {count} | قیمت: {price:,} تومان\n"
+        summary += f"{skin}: {count}\n"
         total_price += price
 
     keyboard = [[InlineKeyboardButton("برای آگهی کردن کلیک کنید", url="https://t.me/Tareq_Cesar_Trade")]]
