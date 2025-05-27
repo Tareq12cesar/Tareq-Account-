@@ -26,7 +26,8 @@ PRICES = {
 EXPLANATIONS = {
     'Supreme': "این دسته شامل اسکین‌های **لجند** می‌باشد.\nچندتا اسکین از این دسته داری؟",
     'Grand': "این دسته شامل اسکین‌های **کوف، جوجوتسو، سوپر هیرو، استاروارز، ناروتو، ابیس و...** هستن.\nتو کالکشن، قسمت **گرند** می‌تونید چک کنید.\nچندتا اسکین از این دسته داری؟",
-    'Exquisite': "این دسته شامل اسکین‌های **کالکتور، لاکی باکس** و **کلادز** می‌باشد.\nچندتا اسکین از این دسته داری؟"
+    'Exquisite': "این دسته شامل اسکین‌های **کالکتور، لاکی باکس** و **کلادز** می‌باشد.\nچندتا اسکین از این دسته داری؟",
+    'Deluxe': "این دسته شامل زودیاک، لایتبورن، اپیک شاپ و... می‌باشد.\nچندتا اسکین از این دسته داری؟"
 }
 
 CHOOSE_SKIN, CONFIRM_END = range(2)
@@ -78,10 +79,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data['skins'] = {}
 
-    keyboard = [[KeyboardButton(skin)] for skin in PRICES.keys()]
+    keyboard = [
+        [KeyboardButton("Supreme")],
+        [KeyboardButton("Grand")],
+        [KeyboardButton("Exquisite")],
+        [KeyboardButton("Deluxe")],
+        [KeyboardButton("پایان")]
+    ]
+
     await update.message.reply_text(
         "سلام! لطفاً نوع اسکینت رو انتخاب کن.",
-        reply_markup=ReplyKeyboardMarkup(keyboard + [['پایان']], one_time_keyboard=False, resize_keyboard=True)
+        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=False, resize_keyboard=True)
     )
     return CHOOSE_SKIN
 
@@ -91,7 +99,7 @@ async def choose_skin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == 'پایان':
         return await show_summary(update, context)
 
-    if text not in PRICES:
+    if text not in EXPLANATIONS:
         await update.message.reply_text("لطفاً یکی از اسکین‌های موجود یا گزینه 'پایان' رو انتخاب کن.")
         return CHOOSE_SKIN
 
@@ -104,19 +112,41 @@ async def confirm_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
         count = int(update.message.text)
         skin = context.user_data['current_skin']
 
-        if skin in context.user_data['skins']:
-            context.user_data['skins'][skin] += count
+        if skin == "Deluxe":
+            if count < 20:
+                price = count * 25000
+            elif 20 <= count <= 40:
+                price = 500000
+            else:
+                price = 700000
         else:
-            context.user_data['skins'][skin] = count
+            price = PRICES[skin] * count
+
+        if 'skins' not in context.user_data:
+            context.user_data['skins'] = {}
+
+        context.user_data['skins'][skin] = context.user_data['skins'].get(skin, 0) + count
+
+        if 'prices' not in context.user_data:
+            context.user_data['prices'] = {}
+
+        context.user_data['prices'][skin] = context.user_data['prices'].get(skin, 0) + price
 
         await update.message.reply_text(
             f"اسکین {skin} با تعداد {count} اضافه شد! برای ادامه انتخاب کن یا 'پایان' رو بزن."
         )
 
-        keyboard = [[KeyboardButton(skin)] for skin in PRICES.keys()]
+        keyboard = [
+            [KeyboardButton("Supreme")],
+            [KeyboardButton("Grand")],
+            [KeyboardButton("Exquisite")],
+            [KeyboardButton("Deluxe")],
+            [KeyboardButton("پایان")]
+        ]
+
         await update.message.reply_text(
             "یک اسکین دیگه انتخاب کن یا 'پایان' رو بزن:",
-            reply_markup=ReplyKeyboardMarkup(keyboard + [['پایان']], one_time_keyboard=False, resize_keyboard=True)
+            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=False, resize_keyboard=True)
         )
 
         return CHOOSE_SKIN
@@ -126,6 +156,7 @@ async def confirm_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     skins = context.user_data.get('skins', {})
+    prices = context.user_data.get('prices', {})
     if not skins:
         await update.message.reply_text("هنوز هیچ اسکینی انتخاب نکردی!")
         return ConversationHandler.END
@@ -134,9 +165,8 @@ async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     total_price = 0
 
     for skin, count in skins.items():
-        price = PRICES[skin] * count
-        summary += f"{skin} {count}\n"
-        total_price += price
+        summary += f"{skin}: {count} عدد\n"
+        total_price += prices.get(skin, 0)
 
     keyboard = [[InlineKeyboardButton("برای آگهی کردن کلیک کنید", url="https://t.me/Tareq_Cesar_Trade")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
