@@ -78,6 +78,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     context.user_data['skins'] = {}
+    context.user_data['prices'] = {}
 
     keyboard = [
         [KeyboardButton("Supreme")],
@@ -86,7 +87,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [KeyboardButton("Deluxe")],
         [KeyboardButton("پایان")]
     ]
-
     await update.message.reply_text(
         "سلام! لطفاً نوع اسکینت رو انتخاب کن.",
         reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=False, resize_keyboard=True)
@@ -122,18 +122,11 @@ async def confirm_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             price = PRICES[skin] * count
 
-        if 'skins' not in context.user_data:
-            context.user_data['skins'] = {}
-
-        context.user_data['skins'][skin] = context.user_data['skins'].get(skin, 0) + count
-
-        if 'prices' not in context.user_data:
-            context.user_data['prices'] = {}
-
-        context.user_data['prices'][skin] = context.user_data['prices'].get(skin, 0) + price
+        context.user_data['skins'][skin] = count
+        context.user_data['prices'][skin] = price
 
         await update.message.reply_text(
-            f"اسکین {skin} با تعداد {count} اضافه شد! برای ادامه انتخاب کن یا 'پایان' رو بزن."
+            f"✅ اسکین {skin} با تعداد {count} و قیمت {price:,} تومان اضافه شد!"
         )
 
         keyboard = [
@@ -143,13 +136,13 @@ async def confirm_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [KeyboardButton("Deluxe")],
             [KeyboardButton("پایان")]
         ]
-
         await update.message.reply_text(
             "یک اسکین دیگه انتخاب کن یا 'پایان' رو بزن:",
             reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=False, resize_keyboard=True)
         )
 
         return CHOOSE_SKIN
+
     except:
         await update.message.reply_text("لطفاً یک عدد معتبر وارد کن.")
         return CONFIRM_END
@@ -165,8 +158,9 @@ async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     total_price = 0
 
     for skin, count in skins.items():
-        summary += f"{skin}: {count} عدد\n"
-        total_price += prices.get(skin, 0)
+        price = prices.get(skin, 0)
+        summary += f"{skin} - تعداد: {count} | قیمت: {price:,} تومان\n"
+        total_price += price
 
     keyboard = [[InlineKeyboardButton("برای آگهی کردن کلیک کنید", url="https://t.me/Tareq_Cesar_Trade")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
