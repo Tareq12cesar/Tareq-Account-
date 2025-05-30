@@ -17,7 +17,7 @@ def run():
 threading.Thread(target=run).start()
 
 # تلگرام و داده‌ها
-CHANNEL_USERNAME = "Mobile_Legend_ir"
+CHANNEL_USERNAME = "@Mobile_Legend_ir"
 ADMIN_ID = 123456789  # آیدی عددی ادمین رو اینجا بزن
 
 PRICES = {
