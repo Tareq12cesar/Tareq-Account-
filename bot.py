@@ -16,7 +16,7 @@ def run():
 threading.Thread(target=run).start()
 
 # =================== Telegram Bot Logic ==========================
-TOKEN = "7933020801:AAHaBEa43nikjSSNj_qKZ0L27r3ooJV6UDI"
+BOT_TOKEN = "7933020801:AAHaBEa43nikjSSNj_qKZ0L27r3ooJV6UDI"
 CHANNEL_USERNAME = "@Mobile_Legend_IR"
 ADMIN_ID = 6697070308  # 👈 آیدی عددی ادمین رو اینجا بذار
 
