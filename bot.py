@@ -258,4 +258,4 @@ async def ask_important_skins(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def ask_description(update: Update, context: ContextTypes.DEFAULT_TYPE):
     description = update.message.text
     context.user_data['ad']['description'] = description
-    await update.message.reply_text("قیمت فروش
+    await update.message.reply_text("قیمت فروش")
