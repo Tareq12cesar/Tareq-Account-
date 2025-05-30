@@ -1,16 +1,8 @@
 from flask import Flask
 import threading
 
-from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ConversationHandler, ContextTypes, filters
-
-BOT_TOKEN = "7933020801:AAHaBEa43nikjSSNj_qKZ0L27r3ooJV6UDI"
-CHANNEL_USERNAME = "@Mobile_Legend_ir"
-ADMIN_ID = 6697070308  # آی‌دی عددی ادمین برای تایید آگهی‌ها
-
 app = Flask(__name__)
 
-# برای جلوگیری از بسته شدن برنامه
 @app.route('/')
 def home():
     return "Bot is running!"
@@ -20,6 +12,17 @@ def run():
 
 threading.Thread(target=run).start()
 
+from telegram import (
+    Update, KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
+)
+from telegram.ext import (
+    ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler,
+    ConversationHandler, ContextTypes, filters
+)
+BOT_TOKEN = "7933020801:AAHaBEa43nikjSSNj_qKZ0L27r3ooJV6UDI"
+CHANNEL_USERNAME = "@Mobile_Legend_IR"
+ADMIN_ID = 6697070308  # ادمین ربات را اینجا قرار بده
+
 PRICES = {
     'Supreme': 1200000,
     'Grand': 500000,
@@ -28,14 +31,22 @@ PRICES = {
 
 EXPLANATIONS = {
     'Supreme': "✅ این دسته شامل اسکین‌های لجند می‌باشد.\n\nچندتا اسکین از این دسته داری؟",
-    'Grand': "✅ این دسته شامل اسکین‌های کوف، جوجوتسو، سوپر هیرو، استاروارز، ناروتو، ابیس و... می‌باشد.\n\n❌ توجه: اسکین‌های رایگان رو حساب نکنید.\n\nچندتا اسکین از این دسته داری؟",
-    'Exquisite': "✅ این دسته شامل اسکین‌های کالکتور، لاکی باکس و کلادز می‌باشد.\n\n❌ توجه: اسکین‌های رایگان رو حساب نکنید.\n\nچندتا اسکین از این دسته داری؟",
+    'Grand': "✅ این دسته شامل اسکین‌های کوف، جوجوتسو، سوپر هیرو، استاروارز، ناروتو، ابیس و... می‌باشد.(از اسکین های پرایم فقط راجر رو اینجا وارد کنید و بقیه رو در قسمت Exquisite وارد کنید)\n\n❌ توجه داشته باشید اسکین‌های رایگان این دسته مثل کارینا، تاموز، فلورین، راجر و... رو حساب نکنید.\n\nچندتا اسکین از این دسته داری؟",
+    'Exquisite': "✅ این دسته شامل اسکین‌های کالکتور، لاکی باکس و کلادز می‌باشد(اسکین های پرایم در این قسمت وارد کنید).\n\n❌ توجه داشته باشید اسکین‌های رایگان این دسته مثل ناتالیا و... رو حساب نکنید.\n\nچندتا اسکین از این دسته داری؟",
     'Deluxe': "✅ این دسته شامل اسکین‌های زودیاک، لایتبورن، اپیک شاپ و... می‌باشد.\n\nچندتا اسکین از این دسته داری؟"
 }
 
-ads = []  # ذخیره آگهی‌ها در حافظه
+# حالت‌های conversation برای محاسبه قیمت
+CHOOSE_SKIN, CONFIRM_END = range(2)
 
-CHOOSE_SKIN, CONFIRM_END, COLLECT_NAME, KEY_SKINS, DESCRIPTION, PRICE, VIDEO = range(7)
+# حالت‌های conversation برای ثبت آگهی
+(ASK_COLLECTION, ASK_TOTAL_SKINS, ASK_IMPORTANT_SKINS, ASK_DESCRIPTION,
+ ASK_PRICE, ASK_VIDEO, CONFIRM_AD) = range(100, 107)
+
+# حالت‌های مشاهده آگهی (فعلاً نیازی نیست conversation)
+
+# ---------------------------------
+# توابع چک عضویت
 
 async def check_membership(user_id, context):
     try:
@@ -47,16 +58,28 @@ async def check_membership(user_id, context):
 async def check_membership_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+
     user_id = query.from_user.id
     if await check_membership(user_id, context):
-        await query.edit_message_text("✅ عضویت شما تایید شد! /start رو بزن.")
+        await query.edit_message_text(
+            "✅ عضویت شما تایید شد! حالا می‌تونی از ربات استفاده کنی.\n"
+            "توجه: اسکین‌های رایگان مثل **کوف کارینا** و... رو حساب نکنید چون ارزش خاصی ندارن.\n\n"
+            "برای ادامه /start رو بزن."
+        )
     else:
         keyboard = [
             [InlineKeyboardButton("عضویت در کانال", url=f"https://t.me/{CHANNEL_USERNAME[1:]}")],
             [InlineKeyboardButton("عضوشدم | فعال‌سازی", callback_data="check_membership")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text("⛔️ عضو کانال نیستی! روی دکمه زیر بزن و بعد دوباره تلاش کن.", reply_markup=reply_markup)
+
+        await query.edit_message_text(
+            f"⛔️ هنوز عضو کانال نشدی!\n\nلطفاً روی دکمه زیر کلیک کن و بعد دوباره دکمه 'عضوشدم | فعال‌سازی' رو بزن.",
+            reply_markup=reply_markup
+        )
+
+# ---------------------------------
+# منوی اصلی
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -66,42 +89,75 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("عضوشدم | فعال‌سازی", callback_data="check_membership")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_text("لطفاً اول عضو کانال بشو:", reply_markup=reply_markup)
-        return ConversationHandler.END
-    keyboard = [[KeyboardButton("محاسبه قیمت"), KeyboardButton("ثبت آگهی"), KeyboardButton("مشاهده آگهی‌ها")]]
-    await update.message.reply_text("سلام! یکی از گزینه‌های زیر رو انتخاب کن:", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
 
-async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        await update.message.reply_text(
+            "برای استفاده از ربات لطفاً عضو کانال زیر شوید:",
+            reply_markup=reply_markup
+        )
+        return ConversationHandler.END
+
+    keyboard = [
+        [KeyboardButton("محاسبه قیمت اسکین")],
+        [KeyboardButton("ثبت آگهی فروش")],
+        [KeyboardButton("مشاهده آگهی‌ها")]
+    ]
+    await update.message.reply_text(
+        "سلام! لطفاً یکی از گزینه‌ها را انتخاب کن:",
+        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+    )
+    return 999  # حالت انتخاب منو
+
+async def main_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text == "محاسبه قیمت":
+
+    if text == "محاسبه قیمت اسکین":
+        # پاکسازی داده‌های قبلی برای محاسبه قیمت
         context.user_data['skins'] = {}
         keyboard = [[KeyboardButton(skin)] for skin in ['Supreme', 'Grand', 'Exquisite', 'Deluxe']]
-        await update.message.reply_text("نوع اسکین رو انتخاب کن:", reply_markup=ReplyKeyboardMarkup(keyboard + [['پایان']], resize_keyboard=True))
+        await update.message.reply_text(
+            "لطفاً نوع اسکینت رو انتخاب کن.",
+            reply_markup=ReplyKeyboardMarkup(keyboard + [['پایان']], one_time_keyboard=False, resize_keyboard=True)
+        )
         return CHOOSE_SKIN
-    elif text == "ثبت آگهی":
-        await update.message.reply_text("نام کالکشن رو بفرست:")
-        return COLLECT_NAME
+
+    elif text == "ثبت آگهی فروش":
+        await update.message.reply_text("لطفاً کالکشن اکانتت رو وارد کن:")
+        return ASK_COLLECTION
+
     elif text == "مشاهده آگهی‌ها":
+        ads = context.bot_data.get('ads', [])
         if not ads:
-            await update.message.reply_text("❌ هنوز هیچ آگهی‌ای ثبت نشده.")
+            await update.message.reply_text("فعلاً هیچ آگهی‌ای ثبت نشده.")
         else:
+            msg = "آگهی‌های ثبت شده:\n\n"
             for i, ad in enumerate(ads, 1):
-                await update.message.reply_text(f"📢 آگهی شماره {i}\n\n"
-                                                f"🏷️ نام کالکشن: {ad['name']}\n"
-                                                f"🔑 اسکین‌های مهم: {ad['key_skins']}\n"
-                                                f"📝 توضیحات: {ad['description']}\n"
-                                                f"💰 قیمت: {ad['price']}\n"
-                                                f"📹 ویدیو:", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("مشاهده ویدیو", url=ad['video_url'])]]))
+                msg += (f"آگهی {i}:\n"
+                        f"کالکشن: {ad['collection']}\n"
+                        f"تعداد اسکین‌ها: {ad['total_skins']}\n"
+                        f"اسکین‌های مهم: {ad['important_skins']}\n"
+                        f"توضیح: {ad['description']}\n"
+                        f"قیمت فروش: {ad['price']}\n"
+                        "-------------------------\n")
+            await update.message.reply_text(msg)
+        return ConversationHandler.END
+
     else:
-        await update.message.reply_text("لطفاً یکی از گزینه‌ها رو انتخاب کن.")
+        await update.message.reply_text("لطفاً یکی از گزینه‌های موجود را انتخاب کن.")
+        return 999
+
+# ---------------------------------
+# بخش محاسبه قیمت
 
 async def choose_skin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
+
     if text == 'پایان':
         return await show_summary(update, context)
+
     if text not in PRICES and text != 'Deluxe':
-        await update.message.reply_text("لطفاً نوع اسکین معتبر رو انتخاب کن.")
+        await update.message.reply_text("لطفاً یکی از اسکین‌های موجود یا گزینه 'پایان' رو انتخاب کن.")
         return CHOOSE_SKIN
+
     context.user_data['current_skin'] = text
     await update.message.reply_text(EXPLANATIONS[text])
     return CONFIRM_END
@@ -110,8 +166,22 @@ async def confirm_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         count = int(update.message.text)
         skin = context.user_data['current_skin']
-        context.user_data['skins'][skin] = context.user_data['skins'].get(skin, 0) + count
-        await update.message.reply_text(f"✅ اسکین {skin} با تعداد {count} ثبت شد. ادامه بده یا 'پایان' رو بزن.")
+
+        if skin in context.user_data['skins']:
+            context.user_data['skins'][skin] += count
+        else:
+            context.user_data['skins'][skin] = count
+
+        await update.message.reply_text(
+            f"✅ اسکین {skin} با تعداد {count} اضافه شد! برای ادامه انتخاب کن یا 'پایان' رو بزن."
+        )
+
+        keyboard = [[KeyboardButton(skin)] for skin in ['Supreme', 'Grand', 'Exquisite', 'Deluxe']]
+        await update.message.reply_text(
+            "یک اسکین دیگه انتخاب کن یا 'پایان' رو بزن:",
+            reply_markup=ReplyKeyboardMarkup(keyboard + [['پایان']], one_time_keyboard=False, resize_keyboard=True)
+        )
+
         return CHOOSE_SKIN
     except:
         await update.message.reply_text("لطفاً یک عدد معتبر وارد کن.")
@@ -120,98 +190,72 @@ async def confirm_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     skins = context.user_data.get('skins', {})
     if not skins:
-        await update.message.reply_text("هنوز اسکینی ثبت نکردی!")
+        await update.message.reply_text("هنوز هیچ اسکینی انتخاب نکردی!")
         return ConversationHandler.END
+
     summary = ""
     total_price = 0
+
     for skin, count in skins.items():
-        price = (count * 25000 if skin == 'Deluxe' and count < 20 else
-                 500000 if skin == 'Deluxe' and 20 <= count <= 40 else
-                 700000 if skin == 'Deluxe' and count > 40 else
-                 PRICES[skin] * count)
+        if skin == 'Deluxe':
+            if count < 20:
+                price = count * 25000
+            elif 20 <= count <= 40:
+                price = 500000
+            else:
+                price = 700000
+        else:
+            price = PRICES[skin] * count
+
         summary += f"{skin}: {count}\n"
         total_price += price
-    await update.message.reply_text(f"✅ اسکین‌ها:\n{summary}\n💵 قیمت کل: {total_price:,} تومان\n\nقیمت بالا ارزش اکانت شماست.\nبرای ثبت آگهی، قیمت رو خودتون مشخص کنید.")
+
+    keyboard = [[InlineKeyboardButton("برای آگهی کردن کلیک کنید", url="https://t.me/Tareq_Cesar_Trade")]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await update.message.reply_text(
+        f"✅ اسکین‌هایی که انتخاب کردی:\n{summary}\nقیمت کل: {total_price:,} تومان\n\nقیمت بالا ارزش اکانت شماست\nبرای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید",
+        reply_markup=reply_markup
+    )
+
     await update.message.reply_text("برای شروع دوباره /start رو بزن.")
     return ConversationHandler.END
 
-async def collect_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data['ad'] = {'name': update.message.text}
-    await update.message.reply_text("اسکین‌های مهم رو بنویس:")
-    return KEY_SKINS
+# ---------------------------------
+# بخش ثبت آگهی
 
-async def key_skins(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data['ad']['key_skins'] = update.message.text
-    await update.message.reply_text("توضیحات اکانت رو بنویس:")
-    return DESCRIPTION
+async def ask_collection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data['ad'] = {}
+    context.user_data['ad']['user_id'] = update.effective_user.id
+    context.user_data['ad']['username'] = update.effective_user.username or "ندارد"
 
-async def description(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data['ad']['description'] = update.message.text
-    await update.message.reply_text("قیمت مدنظر رو بنویس:")
-    return PRICE
+    collection = update.message.text
+    if 'collection' not in context.user_data['ad']:
+        context.user_data['ad']['collection'] = collection
+        await update.message.reply_text("تعداد کل اسکین‌های اکانت رو وارد کن:")
+        return ASK_TOTAL_SKINS
 
-async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data['ad']['price'] = update.message.text
-    await update.message.reply_text("حالا لینک ویدیوی اسکین‌ها رو بفرست (آپلود کن ویدیو رو):")
-    return VIDEO
+async def ask_total_skins(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        total_skins = int(update.message.text)
+        context.user_data['ad']['total_skins'] = total_skins
+        await update.message.reply_text("تعداد اسکین‌های مهم اکانت رو وارد کن:")
+        return ASK_IMPORTANT_SKINS
+    except:
+        await update.message.reply_text("لطفاً یک عدد معتبر وارد کن:")
+        return ASK_TOTAL_SKINS
 
-async def video(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    file = await update.message.video.get_file()
-    file_url = file.file_path
-    ad = context.user_data['ad']
-    ad['video_url'] = file_url
-    ad['user_id'] = update.effective_user.id
-    ad['approved'] = False
-    ad['index'] = len(ads) + 1
-    ads.append(ad)
-    await context.bot.send_message(chat_id=ADMIN_ID, text=f"📢 درخواست آگهی جدید:\n\n"
-                                                          f"🏷️ نام: {ad['name']}\n"
-                                                          f"🔑 اسکین‌های مهم: {ad['key_skins']}\n"
-                                                          f"📝 توضیحات: {ad['description']}\n"
-                                                          f"💰 قیمت: {ad['price']}\n\n"
-                                                          f"/approve_{ad['index']} تایید\n"
-                                                          f"/reject_{ad['index']} رد")
-    await update.message.reply_text("آگهی شما برای بررسی به ادمین ارسال شد. ✅")
-    return ConversationHandler.END
+async def ask_important_skins(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        important_skins = int(update.message.text)
+        context.user_data['ad']['important_skins'] = important_skins
+        await update.message.reply_text("یک توضیح کوتاه درباره اکانت بده:")
+        return ASK_DESCRIPTION
+    except:
+        await update.message.reply_text("لطفاً یک عدد معتبر وارد کن:")
+        return ASK_IMPORTANT_SKINS
 
-async def approve(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    index = int(update.message.text.split("_")[1]) - 1
-    if 0 <= index < len(ads):
-        ads[index]['approved'] = True
-        await update.message.reply_text(f"✅ آگهی شماره {index + 1} تایید شد.")
-    else:
-        await update.message.reply_text("❌ آگهی پیدا نشد.")
-
-async def reject(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    index = int(update.message.text.split("_")[1]) - 1
-    if 0 <= index < len(ads):
-        user_id = ads[index]['user_id']
-        ads.pop(index)
-        await context.bot.send_message(chat_id=user_id, text="❌ آگهی شما تایید نشد.")
-        await update.message.reply_text("✅ آگهی رد شد و به کاربر اطلاع داده شد.")
-    else:
-        await update.message.reply_text("❌ آگهی پیدا نشد.")
-
-app_tele = ApplicationBuilder().token(BOT_TOKEN).build()
-
-conv_handler = ConversationHandler(
-    entry_points=[CommandHandler("start", start)],
-    states={
-        CHOOSE_SKIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_skin)],
-        CONFIRM_END: [MessageHandler(filters.TEXT & ~filters.COMMAND, confirm_end)],
-        COLLECT_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, collect_name)],
-        KEY_SKINS: [MessageHandler(filters.TEXT & ~filters.COMMAND, key_skins)],
-        DESCRIPTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, description)],
-        PRICE: [MessageHandler(filters.TEXT & ~filters.COMMAND, price)],
-        VIDEO: [MessageHandler(filters.VIDEO, video)]
-    },
-    fallbacks=[CommandHandler("start", start)]
-)
-
-app_tele.add_handler(conv_handler)
-app_tele.add_handler(CallbackQueryHandler(check_membership_button, pattern="check_membership"))
-app_tele.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
-app_tele.add_handler(CommandHandler("approve", approve))
-app_tele.add_handler(CommandHandler("reject", reject))
-
-app_tele.run_polling()
+async def ask_description(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    description = update.message.text
+    context.user_data['ad']['description'] = description
+    await update.message.reply_text("قیمت فروش
