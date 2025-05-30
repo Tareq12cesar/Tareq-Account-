@@ -55,7 +55,7 @@ async def check_membership_button(update: Update, context: ContextTypes.DEFAULT_
         )
     else:
         keyboard = [
-            [InlineKeyboardButton("عضویت در کانال", url=f"https://t.me/Mobile_Legend_ir[1:]}")],
+            [InlineKeyboardButton("عضویت در کانال", url=f"https://t.me/{CHANNEL_USERNAME[1:]}")],
             [InlineKeyboardButton("عضوشدم | فعال‌سازی", callback_data="check_membership")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -69,7 +69,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not await check_membership(user_id, context):
         keyboard = [
-            [InlineKeyboardButton("عضویت در کانال", url=f"https://t.me/Mobile_Legend_ir[1:]}")],
+            [InlineKeyboardButton("عضویت در کانال", url=f"https://t.me/{CHANNEL_USERNAME[1:]}")],
             [InlineKeyboardButton("عضوشدم | فعال‌سازی", callback_data="check_membership")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
