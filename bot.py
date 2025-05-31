@@ -12,6 +12,8 @@ CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال
 bot = telebot.TeleBot(BOT_TOKEN)
 user_data = {}
 
+ad_counter = 0  # شمارنده آگهی‌ها
+
 # ======= دکمه منو =======
 def send_menu(chat_id):
     markup = types.InlineKeyboardMarkup()
@@ -58,44 +60,63 @@ def get_price(message):
 def get_video(message):
     if message.content_type != 'video':
         bot.send_message(message.chat.id, "❌ لطفاً فقط یک ویدئو ارسال کنید:")
+        bot.register_next_step_handler(message, get_video)
         return
     user_data[message.chat.id]['video'] = message.video.file_id
     send_to_admin(message.chat.id)
 
 def send_to_admin(user_id):
+    global ad_counter
+    ad_counter += 1  # افزایش شمارنده آگهی
     data = user_data[user_id]
-    caption = f"📢 آگهی تأیید شده:\n\n" \
-          f"🧩 کالکشن: {data['collection']}\n" \
-          f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
-          f"📝 توضیحات: {data['description']}\n" \
-          f"💰 قیمت: {data['price']} تومان\n\n" \
-          f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}\n" \
-          f"🆔 آیدی عددی: {data['user_id']}"
+    ad_code = f"آگهی شماره {ad_counter}"
+    caption = f"📢 {ad_code} - آگهی جدید برای بررسی:\n\n" \
+              f"🧩 کالکشن: {data['collection']}\n" \
+              f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
+              f"📝 توضیحات: {data['description']}\n" \
+              f"💰 قیمت: {data['price']} تومان\n\n" \
+              f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}\n" \
+              f"🆔 آیدی عددی: {data['user_id']}"
 
     markup = types.InlineKeyboardMarkup()
-    approve_button = types.InlineKeyboardButton("✅ تأیید", callback_data=f"approve_{user_id}")
-    reject_button = types.InlineKeyboardButton("❌ رد", callback_data=f"reject_{user_id}")
+    approve_button = types.InlineKeyboardButton("✅ تأیید", callback_data=f"approve_{user_id}_{ad_counter}")
+    reject_button = types.InlineKeyboardButton("❌ رد", callback_data=f"reject_{user_id}_{ad_counter}")
     markup.add(approve_button, reject_button)
     bot.send_video(ADMIN_ID, data['video'], caption=caption, reply_markup=markup)
     bot.send_message(user_id, "آگهی شما برای بررسی به ادمین ارسال شد. پس از تأیید، در کانال منتشر خواهد شد.")
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('approve_') or call.data.startswith('reject_'))
 def handle_admin_response(call):
-    action, user_id = call.data.split('_')
-    user_id = int(user_id)
+    try:
+        parts = call.data.split('_')
+        action = parts[0]
+        user_id = int(parts[1])
+        ad_code_num = parts[2]  # شماره آگهی برای رفرنس (اگر خواستید)
+    except:
+        bot.answer_callback_query(call.id, "خطا در داده‌های آگهی.")
+        return
+
     data = user_data.get(user_id)
     if not data:
         bot.answer_callback_query(call.id, "اطلاعات آگهی یافت نشد.")
         return
 
+    ad_code = f"آگهی شماره {ad_code_num}"
+
     if action == 'approve':
-        caption = f"📢 آگهی تأیید شده:\n\n" \
+        caption = f"📢 {ad_code} - آگهی تأیید شده:\n\n" \
                   f"🧩 کالکشن: {data['collection']}\n" \
                   f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
                   f"📝 توضیحات: {data['description']}\n" \
-                  f"💰 قیمت: {data['price']} تومان\n" \
+                  f"💰 قیمت: {data['price']} تومان\n\n" \
                   f"👤 ارسال‌کننده: @{data['username'] or 'id'}"
-        bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption)
+
+        # دکمه ارتباط با ادمین برای ارسال در کانال
+        markup = types.InlineKeyboardMarkup()
+        contact_admin_btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+        markup.add(contact_admin_btn)
+
+        bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
         bot.send_message(user_id, "✅ آگهی شما تأیید و در کانال منتشر شد.")
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
     elif action == 'reject':
@@ -125,8 +146,6 @@ def calculate_price(message):
         bot.send_message(message.chat.id, "❌ نوع اسکین معتبر نیست. لطفاً مجدداً تلاش کنید.", reply_markup=types.ReplyKeyboardRemove())
 
 # ======= اجرای ربات با Flask (در صورت نیاز) =======
-from flask import Flask, request
-
 app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
@@ -138,8 +157,6 @@ def webhook():
     update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
     bot.process_new_updates([update])
     return 'ok', 200
-
-import threading
 
 def run():
     app.run(host='0.0.0.0', port=8080)
