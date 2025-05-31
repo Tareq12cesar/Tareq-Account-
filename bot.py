@@ -94,7 +94,7 @@ def handle_admin_response(call):
                   f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
                   f"📝 توضیحات: {data['description']}\n" \
                   f"💰 قیمت: {data['price']} تومان\n" \
-                  f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
+                  f"👤 ارسال‌کننده: @{data['username'] or 'id'}"
         bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption)
         bot.send_message(user_id, "✅ آگهی شما تأیید و در کانال منتشر شد.")
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
