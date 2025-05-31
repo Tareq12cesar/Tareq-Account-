@@ -8,24 +8,17 @@ CHANNEL_USERNAME = '@filmeskina'  # یوزرنیم کانال
 CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال برای دکمه مشاهده آگهی‌ها
 
 bot = telebot.TeleBot(BOT_TOKEN)
+bot.set_my_commands([
+    telebot.types.BotCommand('menu', 'نمایش منو')
+])
 
-# ======= دکمه منو =======
-def send_menu(chat_id):
-    markup = types.InlineKeyboardMarkup()
-    post_button = types.InlineKeyboardButton("ثبت آگهی", callback_data='post_ad')
-    view_button = types.InlineKeyboardButton("مشاهده آگهی‌ها", url=CHANNEL_LINK)
-    price_button = types.InlineKeyboardButton("قیمت یاب اکانت", callback_data='price_finder')
-    markup.add(post_button)
-    markup.add(view_button)
-    markup.add(price_button)
-    bot.send_message(chat_id, "سلام! از دکمه‌های زیر استفاده کنید:", reply_markup=markup)
+# ======= منوی اصلی =======
+@bot.message_handler(commands=['start'])
 
-# ======= دستور /start و /menu =======
-@bot.message_handler(commands=['start', 'menu'])
-def menu_command(message):
-    send_menu(message.chat.id)
+def start(message):
+    bot.send_message(message.chat.id, "سلام! برای استفاده از امکانات، روی علامت 📋 پایین چت بزن و دکمه‌ها رو انتخاب کن.\nیا دستور /menu رو تایپ کن.")
+@bot.message_handler(commands=['menu'])
 
-# ======= سیستم ثبت آگهی =======
 user_data = {}
 
 @bot.callback_query_handler(func=lambda call: call.data == 'post_ad')
@@ -69,13 +62,13 @@ def send_to_admin(message):
               f"📝 توضیحات: {data['description']}\n" \
               f"💰 قیمت: {data['price']} تومان\n\n" \
               f"👤 ارسال‌کننده: @{message.from_user.username or message.from_user.first_name}"
-    markup = types.InlineKeyboardMarkup()
-    approve_button = types.InlineKeyboardButton("✅ تأیید", callback_data=f"approve_{message.chat.id}")
-    reject_button = types.InlineKeyboardButton("❌ رد", callback_data=f"reject_{message.chat.id}")
+        markup = types.InlineKeyboardMarkup()
+    approve_button = types.InlineKeyboardButton("✅ تأیید", callback_data=f"approve_{message.from_user.id}")
+    reject_button = types.InlineKeyboardButton("❌ رد", callback_data=f"reject_{message.from_user.id}")
     markup.add(approve_button, reject_button)
+
     bot.send_video(ADMIN_ID, data['video'], caption=caption, reply_markup=markup)
     bot.send_message(message.chat.id, "آگهی شما برای بررسی به ادمین ارسال شد. پس از تأیید، در کانال منتشر خواهد شد.")
-
 @bot.callback_query_handler(func=lambda call: call.data.startswith('approve_') or call.data.startswith('reject_'))
 def handle_admin_response(call):
     action, user_id = call.data.split('_')
@@ -112,7 +105,7 @@ def calculate_price(message):
         "Supreme": 1200000,
         "Grand": 500000,
         "Exquisite": 300000,
-        "Deluxe": 100000
+        "Deluxe": 100000  # میتونی این قیمت رو تغییر بدی
     }
     price = prices.get(skin_type)
     if price:
@@ -121,4 +114,25 @@ def calculate_price(message):
         bot.send_message(message.chat.id, "❌ نوع اسکین معتبر نیست. لطفاً مجدداً تلاش کنید.", reply_markup=types.ReplyKeyboardRemove())
 
 # ======= اجرای ربات =======
+from flask import Flask, request
+
+app = Flask(__name__)
+
+@app.route('/', methods=['GET'])
+def index():
+    return '✅ Bot is alive and running!', 200
+
+@app.route('/', methods=['POST'])
+def webhook():
+    update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
+    bot.process_new_updates([update])
+    return 'ok', 200
+
+import threading
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+threading.Thread(target=run).start()
+
 bot.infinity_polling()
