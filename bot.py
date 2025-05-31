@@ -64,13 +64,13 @@ def get_video(message):
 
 def send_to_admin(user_id):
     data = user_data[user_id]
-    caption = f"📢 آگهی جدید:\n\n" \
-              f"🧩 کالکشن: {data['collection']}\n" \
-              f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
-              f"📝 توضیحات: {data['description']}\n" \
-              f"💰 قیمت: {data['price']} تومان\n\n" \
-              f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}\n" \
-              f"🆔 آیدی عددی: {data['user_id']}"
+    caption = f"📢 آگهی تأیید شده:\n\n" \
+          f"🧩 کالکشن: {data['collection']}\n" \
+          f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
+          f"📝 توضیحات: {data['description']}\n" \
+          f"💰 قیمت: {data['price']} تومان\n\n" \
+          f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}\n" \
+          f"🆔 آیدی عددی: {data['user_id']}"
 
     markup = types.InlineKeyboardMarkup()
     approve_button = types.InlineKeyboardButton("✅ تأیید", callback_data=f"approve_{user_id}")
