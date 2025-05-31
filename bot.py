@@ -8,10 +8,16 @@ CHANNEL_USERNAME = '@filmeskina'  # یوزرنیم کانال
 CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال برای دکمه مشاهده آگهی‌ها
 
 bot = telebot.TeleBot(BOT_TOKEN)
+bot.set_my_commands([
+    telebot.types.BotCommand('menu', 'نمایش منو')
+])
 
 # ======= منوی اصلی =======
 @bot.message_handler(commands=['start'])
 def start(message):
+    bot.send_message(message.chat.id, "سلام! برای استفاده از امکانات، روی علامت 📋 پایین چت بزن و دکمه‌ها رو انتخاب کن.\nیا دستور /menu رو تایپ کن.")
+@bot.message_handler(commands=['menu'])
+def show_menu(message):
     markup = types.InlineKeyboardMarkup()
     post_button = types.InlineKeyboardButton("ثبت آگهی", callback_data='post_ad')
     view_button = types.InlineKeyboardButton("مشاهده آگهی‌ها", url=CHANNEL_LINK)
@@ -20,7 +26,6 @@ def start(message):
     markup.add(view_button)
     markup.add(price_button)
     bot.send_message(message.chat.id, "سلام! از دکمه‌های زیر استفاده کنید:", reply_markup=markup)
-
 # ======= سیستم ثبت آگهی =======
 user_data = {}
 
