@@ -117,4 +117,25 @@ def calculate_price(message):
         bot.send_message(message.chat.id, "❌ نوع اسکین معتبر نیست. لطفاً مجدداً تلاش کنید.", reply_markup=types.ReplyKeyboardRemove())
 
 # ======= اجرای ربات =======
+from flask import Flask, request
+
+app = Flask(__name__)
+
+@app.route('/', methods=['GET'])
+def index():
+    return '✅ Bot is alive and running!', 200
+
+@app.route('/', methods=['POST'])
+def webhook():
+    update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
+    bot.process_new_updates([update])
+    return 'ok', 200
+
+import threading
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+threading.Thread(target=run).start()
+
 bot.infinity_polling()
