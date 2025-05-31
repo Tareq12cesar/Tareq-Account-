@@ -6,7 +6,7 @@ import threading
 # ======= تنظیمات اولیه =======
 BOT_TOKEN = '7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
 ADMIN_ID = 6697070308  # آیدی عددی ادمین
-CHANNEL_USERNAME = '@filmeskina'  # یوزرنیم کانال
+CHANNEL_USERNAME = '@filmskina'  # یوزرنیم کانال
 CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال
 
 bot = telebot.TeleBot(BOT_TOKEN)
