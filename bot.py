@@ -251,30 +251,23 @@ async def admin_callback_handler(update, context):
         await query.edit_message_caption("⚠️ فقط ادمین می‌تواند این آگهی را تایید یا رد کند.")
         return
 
-    data = query.data
+    callback_data = query.data
     message = query.message
 
-    caption = message.caption
-    lines = caption.split('\n')
-    try:
-        user_line = lines[1]
-        collection_line = lines[3]
-        key_skins_line = lines[4]
-        description_line = lines[5]
-        price_line = lines[6]
-
-        user_id_text = user_line.split("id:")[1].strip().replace(")", "")
-        user_id = int(user_id_text)
-        collection = collection_line.split(":")[1].strip()
-        key_skins = key_skins_line.split(":")[1].strip()
-        description = description_line.split(":")[1].strip()
-        price_text = price_line.split(":")[1].strip().replace(" تومان", "").replace(",", "")
-        price = int(price_text)
-    except:
+    # استخراج اطلاعات آگهی از کپشن پیام
+    ad_info = extract_ad_info(message.caption)
+    if not ad_info:
         await query.edit_message_caption("خطا در خواندن اطلاعات آگهی!")
         return
 
-    if data == "ad_approve":
+    user_id = ad_info.get('user_id')
+    collection = ad_info.get('collection')
+    key_skins = ad_info.get('key_skins')
+    description = ad_info.get('description')
+    price = ad_info.get('price')
+    
+    if callback_data == "ad_approve":
+        # ذخیره آگهی در لیست تایید شده‌ها
         approved_ads.append({
             'user_id': user_id,
             'collection': collection,
@@ -284,6 +277,7 @@ async def admin_callback_handler(update, context):
             'video_file_id': message.video.file_id
         })
         await query.edit_message_caption("✅ آگهی تایید و ذخیره شد.")
+        # اطلاع به کاربر درباره تایید آگهی
         try:
             await context.bot.send_message(user_id, "آگهی شما تایید و منتشر شد.")
         except:
