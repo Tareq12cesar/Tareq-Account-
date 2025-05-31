@@ -2,16 +2,34 @@ import telebot
 from telebot import types
 from flask import Flask, request
 import threading
+import os
 
 # ======= تنظیمات اولیه =======
-BOT_TOKEN = '7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
+BOT_TOKEN = 'توکن خودت'
 ADMIN_ID = 6697070308  # آیدی عددی ادمین
 CHANNEL_USERNAME = '@filmskina'  # یوزرنیم کانال
 CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال
 
 bot = telebot.TeleBot(BOT_TOKEN)
 user_data = {}
-ad_code_counter = 0  # شمارنده کد آگهی
+
+# ======= فایل ذخیره شمارنده آگهی =======
+COUNTER_FILE = 'ad_counter.txt'
+
+def load_counter():
+    if os.path.exists(COUNTER_FILE):
+        with open(COUNTER_FILE, 'r') as f:
+            try:
+                return int(f.read().strip())
+            except:
+                return 0
+    return 0
+
+def save_counter(counter):
+    with open(COUNTER_FILE, 'w') as f:
+        f.write(str(counter))
+
+ad_counter = load_counter()
 
 # ======= دکمه منو =======
 def send_menu(chat_id):
@@ -32,13 +50,7 @@ def menu_command(message):
 # ======= سیستم ثبت آگهی =======
 @bot.callback_query_handler(func=lambda call: call.data == 'post_ad')
 def post_ad(call):
-    global ad_code_counter
-    ad_code_counter += 1
-    user_data[call.from_user.id] = {
-        'user_id': call.from_user.id,
-        'username': call.from_user.username,
-        'ad_code': ad_code_counter
-    }
+    user_data[call.from_user.id] = {'user_id': call.from_user.id, 'username': call.from_user.username}
     bot.send_message(call.message.chat.id, "لطفاً نام کالکشن خود را وارد کنید:")
     bot.register_next_step_handler(call.message, get_collection)
 
@@ -72,56 +84,61 @@ def get_video(message):
 
 def send_to_admin(user_id):
     data = user_data[user_id]
-    caption = f"📢 آگهی تأیید شده:\n\n" \
-          f"🧩 کالکشن: {data['collection']}\n" \
-          f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
-          f"📝 توضیحات: {data['description']}\n" \
-          f"💰 قیمت: {data['price']} تومان\n\n" \
-          f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}\n" \
-          f"🆔 آیدی عددی: {data['user_id']}\n" \
-          f"کد آگهی: {data['ad_code']}"
+
+    # شماره آگهی هنوز اضافه نمی‌شود تا تأیید شود
+    caption = f"📢 آگهی جدید برای بررسی:\n\n" \
+              f"🧩 کالکشن: {data['collection']}\n" \
+              f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
+              f"📝 توضیحات: {data['description']}\n" \
+              f"💰 قیمت: {data['price']} تومان\n\n" \
+              f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
 
     markup = types.InlineKeyboardMarkup()
-    approve_button = types.InlineKeyboardButton("✅ تأیید", callback_data=f"approve_{user_id}")
-    reject_button = types.InlineKeyboardButton("❌ رد", callback_data=f"reject_{user_id}")
+    approve_button = types.InlineKeyboardButton("✅ تأیید آگهی", callback_data=f"approve_{user_id}")
+    reject_button = types.InlineKeyboardButton("❌ رد آگهی", callback_data=f"reject_{user_id}")
     markup.add(approve_button, reject_button)
+
     bot.send_video(ADMIN_ID, data['video'], caption=caption, reply_markup=markup)
-    bot.send_message(user_id, "آگهی شما برای بررسی به ادمین ارسال شد. پس از تأیید، در کانال منتشر خواهد شد.")
+    bot.send_message(user_id, "آگهی شما برای بررسی به ادمین ارسال شد.\nپس از تأیید، در کانال منتشر خواهد شد.")
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('approve_') or call.data.startswith('reject_'))
 def handle_admin_response(call):
-    action, user_id = call.data.split('_')
-    user_id = int(user_id)
+    global ad_counter
+    parts = call.data.split('_')
+    action = parts[0]
+    user_id = int(parts[1])
+
     data = user_data.get(user_id)
     if not data:
         bot.answer_callback_query(call.id, "اطلاعات آگهی یافت نشد.")
         return
 
     if action == 'approve':
-        # متن برای کانال (بدون اطلاعات ارسال‌کننده)
-        caption = f"📢 آگهی تأیید شده:\n\n" \
+        ad_counter += 1
+        save_counter(ad_counter)
+        ad_code = ad_counter
+
+        caption = f"📢 آگهی تأیید شده شماره {ad_code}:\n\n" \
                   f"🧩 کالکشن: {data['collection']}\n" \
                   f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
                   f"📝 توضیحات: {data['description']}\n" \
-                  f"💰 قیمت: {data['price']} تومان"
+                  f"💰 قیمت: {data['price']} تومان\n" \
+                  f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}\n" \
+                  f"🆔 کد آگهی: {ad_code}"
 
-        bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption)
+        contact_markup = types.InlineKeyboardMarkup()
+        contact_button = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+        contact_markup.add(contact_button)
 
-        # ارسال پیام کامل به ادمین با آیدی، یوزرنیم و کد آگهی
-        sender_info = f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}\n" \
-                      f"🆔 آیدی عددی: {data['user_id']}\n" \
-                      f"کد آگهی: {data['ad_code']}"
-
-        bot.send_message(ADMIN_ID, f"آگهی شماره {data['ad_code']} توسط کاربر زیر ارسال شده:\n\n{sender_info}")
-
-        bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی شما: {data['ad_code']}")
+        bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=contact_markup)
+        bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی شما: {ad_code}")
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
     elif action == 'reject':
         bot.send_message(user_id, "❌ متأسفانه آگهی شما توسط ادمین رد شد.")
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
-# ======= قیمت‌یاب اکانت (بدون تغییر) =======
+# ======= قیمت‌یاب اکانت (همون قبلی) =======
 @bot.callback_query_handler(func=lambda call: call.data == 'price_finder')
 def price_finder(call):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
@@ -143,7 +160,7 @@ def calculate_price(message):
     else:
         bot.send_message(message.chat.id, "❌ نوع اسکین معتبر نیست. لطفاً مجدداً تلاش کنید.", reply_markup=types.ReplyKeyboardRemove())
 
-# ======= اجرای ربات با Flask (در صورت نیاز) =======
+# ======= اجرای ربات با Flask =======
 app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
