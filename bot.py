@@ -17,19 +17,31 @@ pending_rejections = {}
 
 # ======= دکمه منو =======
 def send_menu(chat_id):
-    markup = types.InlineKeyboardMarkup()
-    post_button = types.InlineKeyboardButton("ثبت آگهی", callback_data='post_ad')
-    view_button = types.InlineKeyboardButton("مشاهده آگهی‌ها", url=CHANNEL_LINK)
-    price_button = types.InlineKeyboardButton("قیمت یاب اکانت", callback_data='price_finder')
-    markup.add(post_button)
-    markup.add(view_button)
-    markup.add(price_button)
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    post_button = types.InlineKeyboardButton("✅ ثبت آگهی", callback_data='post_ad')
+    request_button = types.InlineKeyboardButton("🎮 اکانت درخواستی", callback_data='request_account')
+    view_button = types.InlineKeyboardButton("👁 مشاهده آگهی‌ها", url=CHANNEL_LINK)
+    price_button = types.InlineKeyboardButton("💰 قیمت‌یاب اکانت", callback_data='price_finder')
+    back_button = types.InlineKeyboardButton("🔙 بازگشت", callback_data='back_to_menu')
+    markup.add(post_button, request_button, view_button, price_button, back_button)
     bot.send_message(chat_id, "سلام! از دکمه‌های زیر استفاده کنید:", reply_markup=markup)
 
 # ======= دستور /start و /menu =======
 @bot.message_handler(commands=['start', 'menu'])
 def menu_command(message):
     send_menu(message.chat.id)
+
+# ======= بازگشت به منو =======
+@bot.callback_query_handler(func=lambda call: call.data == 'back_to_menu')
+def back_to_menu(call):
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+    send_menu(call.message.chat.id)
+
+# ======= دکمه اکانت درخواستی =======
+@bot.callback_query_handler(func=lambda call: call.data == 'request_account')
+def request_account(call):
+    bot.send_message(call.message.chat.id, "✅ لطفاً جزئیات اکانت درخواستی خود را وارد کنید:")
+    # اینجا میتونی بعداً مراحل ثبت درخواست رو اضافه کنی
 
 # ======= سیستم ثبت آگهی =======
 @bot.callback_query_handler(func=lambda call: call.data == 'post_ad')
@@ -142,10 +154,14 @@ def handle_admin_text(message):
 def price_finder(call):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     markup.add("Supreme", "Grand", "Exquisite", "Deluxe")
+    markup.add("بازگشت")
     bot.send_message(call.message.chat.id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
     bot.register_next_step_handler(call.message, calculate_price)
 
 def calculate_price(message):
+    if message.text == "بازگشت":
+        send_menu(message.chat.id)
+        return
     skin_type = message.text
     prices = {
         "Supreme": 1200000,
