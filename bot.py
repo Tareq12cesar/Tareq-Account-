@@ -177,6 +177,41 @@ app.add_handler(CallbackQueryHandler(check_membership_button, pattern="check_mem
 COLLECTION, KEY_SKINS, DESCRIPTION, PRICE, VIDEO = range(5)
 
 approved_ads = []
+# فرض کن approved_ads اینجا تعریف شده:
+approved_ads = [
+    {
+        'collection': 'کالکشن اول',
+        'key_skins': 'اسکین A, اسکین B',
+        'description': 'اکانت خوب و نایاب',
+        'price': 1500000,
+        'video_file_id': 'ABC123xyz...'  # نمونه file_id ویدیو
+    },
+    # آگهی‌های دیگر...
+]
+
+# 1. تابع نمایش آگهی‌ها:
+async def view_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not approved_ads:
+        await update.message.reply_text("فعلاً هیچ آگهی تایید شده‌ای وجود ندارد.")
+        return
+
+    for ad in approved_ads:
+        text = (
+            f"🎯 کالکشن: {ad['collection']}\n"
+            f"🌟 اسکین‌های مهم: {ad['key_skins']}\n"
+            f"📝 توضیح: {ad['description']}\n"
+            f"💰 قیمت فروش: {ad['price']:,} تومان"
+        )
+        await context.bot.send_video(
+            chat_id=update.effective_chat.id,
+            video=ad['video_file_id'],
+            caption=text
+        )
+
+# 2. اضافه کردن هندلر:
+app.add_handler(CommandHandler("view_ads", view_ads))
+
+# 3. ادامه کد اصلی ربات...
 ADMIN_ID = 6697070308
 
 async def advertise_start(update, context):
