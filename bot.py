@@ -84,8 +84,6 @@ def get_video(message):
 
 def send_to_admin(user_id):
     data = user_data[user_id]
-
-    # شماره آگهی هنوز اضافه نمی‌شود تا تأیید شود
     caption = f"📢 آگهی جدید برای بررسی:\n\n" \
               f"🧩 کالکشن: {data['collection']}\n" \
               f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
@@ -131,14 +129,14 @@ def handle_admin_response(call):
         contact_markup.add(contact_button)
 
         bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=contact_markup)
-        bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی شما: {ad_code}")
+        bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی شما: {ad_code}\n\nلطفاً این کد را به ادمین ارسال کنید.")
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
     elif action == 'reject':
         bot.send_message(user_id, "❌ متأسفانه آگهی شما توسط ادمین رد شد.")
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
-# ======= قیمت‌یاب اکانت (همون قبلی) =======
+# ======= قیمت‌یاب اکانت =======
 @bot.callback_query_handler(func=lambda call: call.data == 'price_finder')
 def price_finder(call):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
