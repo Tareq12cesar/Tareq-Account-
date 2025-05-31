@@ -1,292 +1,236 @@
 from telegram import (
-    Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
 )
 from telegram.ext import (
-    ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes,
-    CallbackQueryHandler, ConversationHandler
+    ApplicationBuilder,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+    CallbackQueryHandler,
 )
 
-# حالت‌های مختلف برای ConversationHandler
-COLLECTION, KEY_SKINS, DESCRIPTION, PRICE, VIDEO, ADMIN_REVIEW = range(6)
+TOKEN = "7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8"
+ADMIN_ID = 6697070308  # آی‌دی ادمین تلگرام تو
 
-# شناسه ادمین خودت رو اینجا قرار بده
-ADMIN_ID = 6697070308
+# متغیر سراسری برای ذخیره آگهی‌های تایید شده
+approved_ads = []
 
-# داده‌ها در حافظه (در حالت واقعی بهتر دیتابیس استفاده کنی)
-pending_ads = []  # آگهی‌های در انتظار تایید (دیکشنری با اطلاعات کامل)
-approved_ads = []  # آگهی‌های تایید شده (هر آگهی با یک id منحصر به فرد)
-
-# متغیر موقت برای ذخیره داده کاربر در طول گفتگو
-user_ad_data = {}
-
-# قیمت اسکین‌ها (مثال)
+# اینجا متغیرها و دیکشنری قیمت‌ها و توضیحات اسکین‌ها (کد قبلی قیمت‌یابی را اینجا قرار بده)
 skin_prices = {
-    "Supreme": 1000000,
-    "Grand": 700000,
-    "Exquisite": 500000,
-    "Deluxe": None  # قیمت بر اساس تعداد متغیر است
+    "Supreme": 350000,
+    "Grand": 300000,
+    "Exquisite": 150000,
+    "Deluxe": None,  # قیمت دلخواه که در زمان محاسبه داده می‌شود
 }
 
-# توضیحات اسکین‌ها
-skin_descriptions = {
-    "Supreme": "✅ اسکین‌های Supreme نایاب و بسیار ارزشمند هستند.",
-    "Grand": "✅ اسکین‌های Grand بسیار زیبا و کمیاب هستند.\n❌ اسکین‌های رایگان در این دسته قرار نمی‌گیرند.",
-    "Exquisite": "✅ اسکین‌های Exquisite ارزش متوسطی دارند.\n❌ اسکین‌های رایگان در این دسته قرار نمی‌گیرند.",
-    "Deluxe": "✅ اسکین‌های Deluxe قیمت متغیر دارند و بر اساس تعداد محاسبه می‌شوند."
+skin_explanations = {
+    "Supreme": "✅ اسکین Supreme یکی از کمیاب‌ترین و گران‌ترین اسکین‌هاست.",
+    "Grand": "✅ اسکین Grand از اسکین‌های ارزشمند بازی است.\n❌ توجه: اسکین‌های رایگان جزو این دسته نیستند.",
+    "Exquisite": "✅ اسکین Exquisite دارای طراحی زیبا و خاص است.\n❌ اسکین‌های رایگان جزو این دسته محسوب نمی‌شوند.",
+    "Deluxe": "✅ اسکین Deluxe بسته به تعداد، قیمت متفاوتی دارد.",
 }
 
-# تابع شروع ربات
+# مرحله ثبت آگهی (توالی سوال‌ها)
+advertise_questions = [
+    "لطفاً نام کالکشن خود را وارد کنید:",
+    "اسکین‌های مهم کالکشن را بنویسید:",
+    "توضیح کوتاهی درباره اکانت بدهید:",
+    "قیمت فروش اکانت را به تومان وارد کنید:",
+    "لطفاً ویدئوی اسکین‌ها را ارسال کنید:"
+]
+
+user_advertise_data = {}  # ذخیره موقت اطلاعات ثبت آگهی هر کاربر
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
     keyboard = [
-        [InlineKeyboardButton("ثبت آگهی جدید", callback_data="start_ad")],
-        [InlineKeyboardButton("مشاهده آگهی‌ها", callback_data="view_ads")],
+        [KeyboardButton("ثبت آگهی"), KeyboardButton("مشاهده آگهی‌ها")],
     ]
-    await update.message.reply_text("سلام! خوش آمدید.\nلطفا یکی از گزینه‌ها را انتخاب کنید:", 
-                                    reply_markup=InlineKeyboardMarkup(keyboard))
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    await update.message.reply_text(
+        f"سلام {user.first_name}! خوش آمدی به ربات قیمت‌یاب و ثبت آگهی Mobile Legends.\n"
+        "لطفاً یکی از گزینه‌ها را انتخاب کن:",
+        reply_markup=reply_markup,
+    )
 
-# شروع فرایند ثبت آگهی
-async def start_ad(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user_ad_data[query.from_user.id] = {}
-    await query.message.reply_text("لطفا نام کالکشن خود را وارد کنید:")
-    return COLLECTION
 
-# دریافت نام کالکشن
-async def collection_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    user_ad_data[user_id]['collection'] = update.message.text
-    await update.message.reply_text("لطفا اسکین‌های کلیدی خود را وارد کنید (مثلاً: Layla, Alucard):")
-    return KEY_SKINS
-
-# دریافت اسکین‌های کلیدی
-async def key_skins_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    user_ad_data[user_id]['key_skins'] = update.message.text
-    await update.message.reply_text("لطفا توضیحاتی درباره اکانت خود بنویسید:")
-    return DESCRIPTION
-
-# دریافت توضیحات
-async def description_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    user_ad_data[user_id]['description'] = update.message.text
-    await update.message.reply_text("لطفا قیمت فروش اکانت را وارد کنید (به تومان):")
-    return PRICE
-
-# دریافت قیمت
-async def price_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    price_text = update.message.text
-    if not price_text.isdigit():
-        await update.message.reply_text("لطفا فقط عدد وارد کنید.")
-        return PRICE
-    user_ad_data[user_id]['price'] = int(price_text)
-    await update.message.reply_text("لطفا ویدیوی اسکین‌های خود را ارسال کنید:")
-    return VIDEO
-
-# دریافت ویدیو
-async def video_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    if update.message.video:
-        user_ad_data[user_id]['video_file_id'] = update.message.video.file_id
-        # افزودن به لیست انتظار تایید ادمین
-        pending_ads.append({
-            "user_id": user_id,
-            **user_ad_data[user_id]
-        })
-        await update.message.reply_text("آگهی شما دریافت شد و پس از تایید ادمین منتشر خواهد شد.")
-        user_ad_data.pop(user_id, None)
-        # اطلاع ادمین
-        await context.bot.send_message(
-            chat_id=ADMIN_ID,
-            text=f"آگهی جدید برای تایید دریافت شد.\n"
-                 f"کالکشن: {pending_ads[-1]['collection']}\n"
-                 f"اسکین‌ها: {pending_ads[-1]['key_skins']}\n"
-                 f"توضیح: {pending_ads[-1]['description']}\n"
-                 f"قیمت: {pending_ads[-1]['price']} تومان",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("تایید", callback_data=f"approve_{len(pending_ads)-1}")],
-                [InlineKeyboardButton("رد", callback_data=f"reject_{len(pending_ads)-1}")]
-            ])
-        )
-        return ConversationHandler.END
+# هندلر دکمه‌های منو
+async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    if text == "ثبت آگهی":
+        user_advertise_data[update.effective_user.id] = {
+            "step": 0,
+            "data": {}
+        }
+        await update.message.reply_text(advertise_questions[0])
+    elif text == "مشاهده آگهی‌ها":
+        await view_ads(update, context)
     else:
-        await update.message.reply_text("لطفا فقط ویدیو ارسال کنید.")
-        return VIDEO
+        await update.message.reply_text("لطفاً یکی از گزینه‌های منو را انتخاب کنید.")
 
-# نمایش آگهی‌ها به کاربران
-async def view_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+# هندلر مرحله‌ای ثبت آگهی
+async def advertise_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if user_id not in user_advertise_data:
+        # اگر کاربر در روند ثبت آگهی نیست، چیزی نده
+        return
+
+    step = user_advertise_data[user_id]["step"]
+    data = user_advertise_data[user_id]["data"]
+
+    if step < 4:  # مراحل متنی
+        data_field = ["collection", "key_skins", "description", "price"][step]
+        data[data_field] = update.message.text
+        step += 1
+        user_advertise_data[user_id]["step"] = step
+        if step < 4:
+            await update.message.reply_text(advertise_questions[step])
+        else:
+            await update.message.reply_text(advertise_questions[4])  # درخواست ویدئو
+    else:
+        # مرحله ویدئو
+        if not update.message.video:
+            await update.message.reply_text("لطفاً فقط ویدئو ارسال کنید.")
+            return
+
+        video_file_id = update.message.video.file_id
+        data["video_file_id"] = video_file_id
+
+        # آماده کردن کپشن برای ارسال به ادمین
+        caption = (
+            f"👤 کاربر: {user_id}\n"
+            f"🎯 کالکشن: {data['collection']}\n"
+            f"🌟 اسکین‌های مهم: {data['key_skins']}\n"
+            f"📝 توضیح: {data['description']}\n"
+            f"💰 قیمت فروش: {data['price']}\n"
+        )
+
+        # دکمه‌های تایید و رد برای ادمین
+        keyboard = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("✅ تایید", callback_data="ad_approve"),
+                InlineKeyboardButton("❌ رد", callback_data="ad_reject"),
+            ]
+        ])
+
+        # ارسال ویدئو و توضیحات به ادمین
+        await context.bot.send_video(
+            chat_id=ADMIN_ID,
+            video=video_file_id,
+            caption=caption,
+            reply_markup=keyboard,
+        )
+
+        await update.message.reply_text("آگهی شما ارسال شد و در انتظار تایید ادمین است.")
+        # حذف داده‌های موقت کاربر
+        del user_advertise_data[user_id]
+
+
+def extract_ad_info(caption):
+    try:
+        lines = caption.split('\n')
+        info = {}
+        for line in lines:
+            if line.startswith("👤 کاربر:"):
+                info['user_id'] = int(line.split(":")[1].strip())
+            elif line.startswith("🎯 کالکشن:"):
+                info['collection'] = line.split(":", 1)[1].strip()
+            elif line.startswith("🌟 اسکین‌های مهم:"):
+                info['key_skins'] = line.split(":", 1)[1].strip()
+            elif line.startswith("📝 توضیح:"):
+                info['description'] = line.split(":", 1)[1].strip()
+            elif line.startswith("💰 قیمت فروش:"):
+                info['price'] = line.split(":", 1)[1].strip()
+        return info
+    except Exception:
+        return None
+
+
+async def admin_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    if not approved_ads:
-        await query.message.reply_text("هیچ آگهی تایید شده‌ای موجود نیست.")
+    user = query.from_user
+
+    if user.id != ADMIN_ID:
+        await query.edit_message_caption("⚠️ فقط ادمین می‌تواند این آگهی را تایید یا رد کند.")
         return
+
+    callback_data = query.data
+    message = query.message
+
+    ad_info = extract_ad_info(message.caption)
+    if not ad_info:
+        await query.edit_message_caption("خطا در خواندن اطلاعات آگهی!")
+        return
+
+    user_id = ad_info.get('user_id')
+    collection = ad_info.get('collection')
+    key_skins = ad_info.get('key_skins')
+    description = ad_info.get('description')
+    price = ad_info.get('price')
+    video_file_id = message.video.file_id
+
+    if callback_data == "ad_approve":
+        approved_ads.append({
+            "user_id": user_id,
+            "collection": collection,
+            "key_skins": key_skins,
+            "description": description,
+            "price": price,
+            "video_file_id": video_file_id,
+        })
+        await query.edit_message_caption("✅ آگهی تایید و ذخیره شد.")
+        try:
+            await context.bot.send_message(user_id, "آگهی شما تایید و منتشر شد.")
+        except:
+            pass
+
+    elif callback_data == "ad_reject":
+        await query.edit_message_caption("❌ آگهی رد شد.")
+        try:
+            await context.bot.send_message(user_id, "آگهی شما توسط ادمین رد شد.")
+        except:
+            pass
+
+
+async def view_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    if not approved_ads:
+        await context.bot.send_message(chat_id, "فعلاً آگهی تایید شده‌ای وجود ندارد.")
+        return
+
     for ad in approved_ads:
         text = (
-            f"کد آگهی: #{ad['id']}\n"
             f"🎯 کالکشن: {ad['collection']}\n"
             f"🌟 اسکین‌های مهم: {ad['key_skins']}\n"
             f"📝 توضیح: {ad['description']}\n"
-            f"💰 قیمت فروش: {ad['price']} تومان\n"
+            f"💰 قیمت فروش: {ad['price']}\n"
         )
-        await context.bot.send_video(chat_id=query.message.chat_id, video=ad["video_file_id"], caption=text)
+        await context.bot.send_video(chat_id=chat_id, video=ad["video_file_id"], caption=text)
 
-# مدیریت پاسخ ادمین برای تایید یا رد آگهی
-async def admin_review(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    data = query.data
 
-    if data.startswith("approve_"):
-        index = int(data.split("_")[1])
-        if 0 <= index < len(pending_ads):
-            ad = pending_ads.pop(index)
-            # اختصاص کد ترتیبی به آگهی
-            ad_id = len(approved_ads) + 1
-            ad["id"] = ad_id
-            approved_ads.append(ad)
+# --- اینجا می‌تونی کد قیمت‌یابی اسکین‌ها و هندلرهای مربوطه رو اضافه کنی --- #
+# برای نمونه ساده:
+async def price_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("سیستم قیمت‌یابی اسکین‌ها به زودی اضافه خواهد شد.")
 
-            await query.edit_message_text(f"آگهی شماره #{ad_id} تایید و منتشر شد.")
-            try:
-                await context.bot.send_message(ad["user_id"], f"آگهی شما تایید و منتشر شد.\nکد آگهی شما: #{ad_id}")
-            except:
-                pass
-
-    elif data.startswith("reject_"):
-        index = int(data.split("_")[1])
-        if 0 <= index < len(pending_ads):
-            ad = pending_ads.pop(index)
-            await query.edit_message_text("آگهی رد شد.")
-            try:
-                await context.bot.send_message(ad["user_id"], "آگهی شما توسط ادمین رد شد.")
-            except:
-                pass
-
-# لغو فرایند ثبت آگهی
-async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("فرایند ثبت آگهی لغو شد.", reply_markup=ReplyKeyboardRemove())
-    return ConversationHandler.END
-
-# --- بخش قیمت‌یاب اسکین‌ها (نمونه ساده) ---
-
-async def price_bot_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        ["Supreme", "Grand"],
-        ["Exquisite", "Deluxe"],
-        ["پایان"]
-    ]
-    await update.message.reply_text(
-        "لطفا نوع اسکین خود را انتخاب کنید یا 'پایان' را برای مشاهده قیمت کل بزنید:",
-        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
-    )
-    context.user_data["total_price"] = 0
-    context.user_data["selected_skins"] = []
-    return 1
-
-async def skin_type_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    if text == "پایان":
-        total_price = context.user_data.get("total_price", 0)
-        await update.message.reply_text(
-            f"قیمت کل اسکین‌ها: {total_price} تومان\n"
-            "قیمت بالا ارزش اکانت شماست\n"
-            "برای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید.",
-            reply_markup=ReplyKeyboardRemove()
-        )
-        return ConversationHandler.END
-
-    if text not in skin_prices:
-        await update.message.reply_text("لطفا یکی از گزینه‌های موجود را انتخاب کنید.")
-        return 1
-
-    # سوال تعداد اسکین‌ها
-    context.user_data["current_skin"] = text
-    await update.message.reply_text(f"تعداد اسکین‌های {text} را وارد کنید:")
-    return 2
-
-async def skin_count_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    count_text = update.message.text
-    if not count_text.isdigit():
-        await update.message.reply_text("لطفا فقط عدد وارد کنید.")
-        return 2
-    count = int(count_text)
-    skin_type = context.user_data.get("current_skin")
-
-    # محاسبه قیمت
-    if skin_type == "Deluxe":
-        if count < 20:
-            price = 25000 * count
-        elif 20 <= count <= 40:
-            price = 500000
-        else:
-            price = 700000
-    else:
-        price = skin_prices[skin_type] * count
-
-    context.user_data["total_price"] += price
-    context.user_data["selected_skins"].append((skin_type, count, price))
-
-    # نمایش توضیحات
-    desc = skin_descriptions.get(skin_type, "")
-    await update.message.reply_text(desc)
-
-    # بازگشت به انتخاب نوع اسکین
-    keyboard = [
-        ["Supreme", "Grand"],
-        ["Exquisite", "Deluxe"],
-        ["پایان"]
-    ]
-    await update.message.reply_text(
-        "لطفا نوع اسکین بعدی را انتخاب کنید یا 'پایان' را بزنید:",
-        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
-    )
-    return 1
-
-def main():
-    app = ApplicationBuilder().token("YOUR_TELEGRAM_BOT_TOKEN").build()
-
-    # هندلر ثبت آگهی
-    ad_conv_handler = ConversationHandler(
-        entry_points=[CallbackQueryHandler(start_ad, pattern="^start_ad$")],
-        states={
-            COLLECTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, collection_received)],
-            KEY_SKINS: [MessageHandler(filters.TEXT & ~filters.COMMAND, key_skins_received)],
-            DESCRIPTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, description_received)],
-            PRICE: [MessageHandler(filters.TEXT & ~filters.COMMAND, price_received)],
-            VIDEO: [MessageHandler(filters.VIDEO, video_received)],
-        },
-        fallbacks=[CommandHandler("cancel", cancel)],
-        allow_reentry=True
-    )
-
-    # هندلر پاسخ ادمین
-    admin_handler = CallbackQueryHandler(admin_review, pattern="^(approve_|reject_).+")
-
-    # هندلر نمایش آگهی‌ها
-    view_ads_handler = CallbackQueryHandler(view_ads, pattern="^view_ads$")
-
-    # هندلر شروع
-    start_handler = CommandHandler("start", start)
-
-    # هندلر قیمت‌یاب اسکین
-    price_conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("price", price_bot_start)],
-        states={
-            1: [MessageHandler(filters.TEXT & ~filters.COMMAND, skin_type_handler)],
-            2: [MessageHandler(filters.TEXT & ~filters.COMMAND, skin_count_handler)],
-        },
-        fallbacks=[CommandHandler("cancel", cancel)],
-        allow_reentry=True
-    )
-
-    app.add_handler(start_handler)
-    app.add_handler(ad_conv_handler)
-    app.add_handler(admin_handler)
-    app.add_handler(view_ads_handler)
-    app.add_handler(price_conv_handler)
-
-    print("Bot is running...")
-    app.run_polling()
 
 if __name__ == "__main__":
-    main()
+    app = ApplicationBuilder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.Regex("^(ثبت آگهی|مشاهده آگهی‌ها)$"), menu_handler))
+    app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, advertise_handler))
+    app.add_handler(CallbackQueryHandler(admin_callback_handler, pattern="ad_.*"))
+    app.add_handler(CommandHandler("view_ads", view_ads))
+    app.add_handler(CommandHandler("price", price_handler))
+
+    print("ربات در حال اجرا است...")
+    app.run_polling()
