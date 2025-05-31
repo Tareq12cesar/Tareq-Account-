@@ -31,7 +31,7 @@ def menu_command(message):
 # ======= سیستم ثبت آگهی =======
 @bot.callback_query_handler(func=lambda call: call.data == 'post_ad')
 def post_ad(call):
-    user_data[call.message.chat.id] = {'user_id': call.message.chat.id, 'username': call.message.from_user.username}
+    user_data[call.from_user.id] = {'user_id': call.from_user.id, 'username': call.from_user.username}
     bot.send_message(call.message.chat.id, "لطفاً نام کالکشن خود را وارد کنید:")
     bot.register_next_step_handler(call.message, get_collection)
 
