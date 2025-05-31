@@ -11,8 +11,7 @@ CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال
 
 bot = telebot.TeleBot(BOT_TOKEN)
 user_data = {}
-
-ad_counter = 0  # شمارنده آگهی‌ها
+ad_counter = 0  # شمارنده کد آگهی‌ها
 
 # ======= دکمه منو =======
 def send_menu(chat_id):
@@ -60,65 +59,59 @@ def get_price(message):
 def get_video(message):
     if message.content_type != 'video':
         bot.send_message(message.chat.id, "❌ لطفاً فقط یک ویدئو ارسال کنید:")
-        bot.register_next_step_handler(message, get_video)
+        bot.register_next_step_handler(message, get_video)  # درخواست مجدد ویدئو
         return
     user_data[message.chat.id]['video'] = message.video.file_id
     send_to_admin(message.chat.id)
 
 def send_to_admin(user_id):
     global ad_counter
-    ad_counter += 1  # افزایش شمارنده آگهی
+    ad_counter += 1
+    user_data[user_id]['ad_code'] = ad_counter  # ذخیره کد آگهی
+
     data = user_data[user_id]
-    ad_code = f"آگهی شماره {ad_counter}"
-    caption = f"📢 {ad_code} - آگهی جدید برای بررسی:\n\n" \
+    caption = f"📢 آگهی شماره {ad_counter}:\n\n" \
               f"🧩 کالکشن: {data['collection']}\n" \
               f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
               f"📝 توضیحات: {data['description']}\n" \
               f"💰 قیمت: {data['price']} تومان\n\n" \
-              f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}\n" \
-              f"🆔 آیدی عددی: {data['user_id']}"
+              f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
 
     markup = types.InlineKeyboardMarkup()
-    approve_button = types.InlineKeyboardButton("✅ تأیید", callback_data=f"approve_{user_id}_{ad_counter}")
-    reject_button = types.InlineKeyboardButton("❌ رد", callback_data=f"reject_{user_id}_{ad_counter}")
+    approve_button = types.InlineKeyboardButton("✅ تأیید", callback_data=f"approve_{user_id}")
+    reject_button = types.InlineKeyboardButton("❌ رد", callback_data=f"reject_{user_id}")
     markup.add(approve_button, reject_button)
     bot.send_video(ADMIN_ID, data['video'], caption=caption, reply_markup=markup)
     bot.send_message(user_id, "آگهی شما برای بررسی به ادمین ارسال شد. پس از تأیید، در کانال منتشر خواهد شد.")
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('approve_') or call.data.startswith('reject_'))
 def handle_admin_response(call):
-    try:
-        parts = call.data.split('_')
-        action = parts[0]
-        user_id = int(parts[1])
-        ad_code_num = parts[2]  # شماره آگهی برای رفرنس (اگر خواستید)
-    except:
-        bot.answer_callback_query(call.id, "خطا در داده‌های آگهی.")
-        return
-
+    action, user_id_str = call.data.split('_')
+    user_id = int(user_id_str)
     data = user_data.get(user_id)
     if not data:
         bot.answer_callback_query(call.id, "اطلاعات آگهی یافت نشد.")
         return
 
-    ad_code = f"آگهی شماره {ad_code_num}"
-
     if action == 'approve':
-        caption = f"📢 {ad_code} - آگهی تأیید شده:\n\n" \
+        ad_code = data.get('ad_code', 'نامشخص')
+
+        caption = f"📢 آگهی شماره {ad_code} - تأیید شده:\n\n" \
                   f"🧩 کالکشن: {data['collection']}\n" \
                   f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
                   f"📝 توضیحات: {data['description']}\n" \
                   f"💰 قیمت: {data['price']} تومان\n\n" \
-                  f"👤 ارسال‌کننده: @{data['username'] or 'id'}"
+                  f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
 
-        # دکمه ارتباط با ادمین برای ارسال در کانال
+        # دکمه ارتباط با ادمین (باز شدن چت با ادمین)
         markup = types.InlineKeyboardMarkup()
         contact_admin_btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
         markup.add(contact_admin_btn)
 
         bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
-        bot.send_message(user_id, "✅ آگهی شما تأیید و در کانال منتشر شد.")
+        bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی شما: {ad_code}\nلطفاً این کد را برای ادمین ارسال کنید.")
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+
     elif action == 'reject':
         bot.send_message(user_id, "❌ متأسفانه آگهی شما توسط ادمین رد شد.")
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
