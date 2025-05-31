@@ -349,15 +349,15 @@ async def menu_with_ads(update, context):
 # --- ثبت هندلرها ---
 
 advertise_conv = ConversationHandler(
-    entry_points=[CommandHandler('advertise', advertise_start)],
+    entry_points=[CommandHandler("advertise", start_advertise)],
     states={
-        COLLECTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_collection)],
-        KEY_SKINS: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_key_skins)],
-        DESCRIPTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_description)],
-        PRICE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_price)],
-        VIDEO: [MessageHandler(filters.VIDEO, get_video)],
+        ASK_COLLECTION_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_key_skins)],
+        ASK_KEY_SKINS: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_description)],
+        ASK_DESCRIPTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_price)],
+        ASK_PRICE: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_video)],
+        ASK_VIDEO: [MessageHandler(filters.VIDEO | filters.Document.VIDEO, save_ad)],
     },
-    fallbacks=[]
+    fallbacks=[],
 )
 
 app.add_handler(advertise_conv)
