@@ -10,7 +10,6 @@ from telegram.ext import (
 COLLECTION, KEY_SKINS, DESCRIPTION, PRICE, VIDEO, ADMIN_REVIEW = range(6)
 
 # شناسه ادمین خودت رو اینجا قرار بده
-TOKEN = "7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8"
 ADMIN_ID = 6697070308
 
 # داده‌ها در حافظه (در حالت واقعی بهتر دیتابیس استفاده کنی)
