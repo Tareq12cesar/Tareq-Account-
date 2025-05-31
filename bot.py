@@ -1,4 +1,4 @@
-from telegram import (
+app.run_polling()from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -13,10 +13,10 @@ from telegram.ext import (
     filters,
     CallbackQueryHandler,
 )
+app.run(host='0.0.0.0', port=8080)
 
 TOKEN = "7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8"
 ADMIN_ID = 6697070308  # آی‌دی ادمین تلگرام تو
-CHANNEL_USERNAME = "@Mobile_Legend_IR"  # کانال برای جوین اجباری
 
 # متغیر سراسری برای ذخیره آگهی‌های تایید شده
 approved_ads = []
@@ -48,18 +48,6 @@ advertise_questions = [
 user_advertise_data = {}  # ذخیره موقت اطلاعات ثبت آگهی هر کاربر
 
 
-async def check_membership(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    try:
-        member = await context.bot.get_chat_member(CHANNEL_USERNAME, user_id)
-        if member.status in ["member", "creator", "administrator"]:
-            return True
-        else:
-            return False
-    except Exception:
-        return False
-
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     keyboard = [
@@ -73,16 +61,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-# هندلر دکمه‌های منو با چک جوین اجباری
+# هندلر دکمه‌های منو
 async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await check_membership(update, context):
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("عضویت در کانال", url=f"https://t.me/{CHANNEL_USERNAME.lstrip('@')}")]])
-        await update.message.reply_text(
-            "⚠️ برای استفاده از ربات باید ابتدا عضو کانال شوید.",
-            reply_markup=keyboard
-        )
-        return
-
     text = update.message.text
     if text == "ثبت آگهی":
         user_advertise_data[update.effective_user.id] = {
@@ -230,4 +210,28 @@ async def view_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for ad in approved_ads:
         text = (
             f"🎯 کالکشن: {ad['collection']}\n"
-            f"🌟 اسکین‌های مهم: {ad['key_skins']}\
+            f"🌟 اسکین‌های مهم: {ad['key_skins']}\n"
+            f"📝 توضیح: {ad['description']}\n"
+            f"💰 قیمت فروش: {ad['price']}\n"
+        )
+        await context.bot.send_video(chat_id=chat_id, video=ad["video_file_id"], caption=text)
+
+
+# --- اینجا می‌تونی کد قیمت‌یابی اسکین‌ها و هندلرهای مربوطه رو اضافه کنی --- #
+# برای نمونه ساده:
+async def price_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("سیستم قیمت‌یابی اسکین‌ها به زودی اضافه خواهد شد.")
+
+
+if __name__ == "__main__":
+    app = ApplicationBuilder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.Regex("^(ثبت آگهی|مشاهده آگهی‌ها)$"), menu_handler))
+    app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, advertise_handler))
+    app.add_handler(CallbackQueryHandler(admin_callback_handler, pattern="ad_.*"))
+    app.add_handler(CommandHandler("view_ads", view_ads))
+    app.add_handler(CommandHandler("price", price_handler))
+
+    print("ربات در حال اجرا است...")
+    app.run_polling()
