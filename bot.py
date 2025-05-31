@@ -5,7 +5,7 @@ import threading
 import os
 
 # ======= تنظیمات اولیه =======
-BOT_TOKEN = 'توکن خودت'
+BOT_TOKEN = '7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
 ADMIN_ID = 6697070308  # آیدی عددی ادمین
 CHANNEL_USERNAME = '@filmskina'  # یوزرنیم کانال
 CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال
