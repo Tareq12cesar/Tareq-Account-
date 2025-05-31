@@ -169,7 +169,7 @@ conv_handler = ConversationHandler(
     },
     fallbacks=[CommandHandler("start", start)]
 )
-
+app.add_handler(CommandHandler("view_ads", view_ads))
 app.add_handler(conv_handler)
 app.add_handler(CallbackQueryHandler(check_membership_button, pattern="check_membership"))
 
@@ -207,10 +207,6 @@ async def view_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
             video=ad['video_file_id'],
             caption=text
         )
-
-# 2. اضافه کردن هندلر:
-app.add_handler(CommandHandler("view_ads", view_ads))
-
 # 3. ادامه کد اصلی ربات...
 ADMIN_ID = 6697070308
 
