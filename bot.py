@@ -241,6 +241,28 @@ async def get_video(update, context):
 
     await update.message.reply_text("آگهی شما به ادمین ارسال شد و پس از تایید نمایش داده خواهد شد.\nبرای شروع دوباره /start را بزنید.")
     return ConversationHandler.END
+import re
+
+def extract_ad_info(caption):
+    data = {}
+    lines = caption.split('\n')
+
+    for line in lines:
+        if line.startswith("🆕 آگهی جدید از کاربر:"):
+            match = re.search(r"کاربر: (.+) id: (\d+)", line)
+            if match:
+                data['user_name'] = match.group(1).strip()
+                data['user_id'] = int(match.group(2).strip())
+        elif line.startswith("🎯 کالکشن:"):
+            data['collection'] = line.split("🎯 کالکشن:")[1].strip()
+        elif line.startswith("🌟 اسکین‌های مهم:"):
+            data['key_skins'] = line.split("🌟 اسکین‌های مهم:")[1].strip()
+        elif line.startswith("📝 توضیح:"):
+            data['description'] = line.split("📝 توضیح:")[1].strip()
+        elif line.startswith("💰 قیمت فروش:"):
+            price_text = line.split("💰 قیمت فروش:")[1].strip().replace(" تومان", "").replace(",", "")
+            data['price'] = int(price_text)
+    return data
 
 async def admin_callback_handler(update, context):
     query = update.callback_query
