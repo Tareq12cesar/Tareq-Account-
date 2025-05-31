@@ -2,6 +2,7 @@ import telebot
 from telebot import types
 from flask import Flask, request
 import threading
+import os
 
 # ======= تنظیمات اولیه =======
 BOT_TOKEN = '7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
@@ -11,7 +12,24 @@ CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال
 
 bot = telebot.TeleBot(BOT_TOKEN)
 user_data = {}
-ad_counter = 0  # شمارنده کد آگهی‌ها
+
+# ======= فایل ذخیره شمارنده آگهی =======
+COUNTER_FILE = 'ad_counter.txt'
+
+def load_counter():
+    if os.path.exists(COUNTER_FILE):
+        with open(COUNTER_FILE, 'r') as f:
+            try:
+                return int(f.read().strip())
+            except:
+                return 0
+    return 0
+
+def save_counter(counter):
+    with open(COUNTER_FILE, 'w') as f:
+        f.write(str(counter))
+
+ad_counter = load_counter()
 
 # ======= دکمه منو =======
 def send_menu(chat_id):
@@ -59,57 +77,60 @@ def get_price(message):
 def get_video(message):
     if message.content_type != 'video':
         bot.send_message(message.chat.id, "❌ لطفاً فقط یک ویدئو ارسال کنید:")
-        bot.register_next_step_handler(message, get_video)  # درخواست مجدد ویدئو
+        bot.register_next_step_handler(message, get_video)
         return
     user_data[message.chat.id]['video'] = message.video.file_id
     send_to_admin(message.chat.id)
 
 def send_to_admin(user_id):
     global ad_counter
-    ad_counter += 1
-    user_data[user_id]['ad_code'] = ad_counter  # ذخیره کد آگهی
-
     data = user_data[user_id]
-    caption = f"📢 آگهی شماره {ad_counter}:\n\n" \
+    ad_counter += 1
+    save_counter(ad_counter)
+
+    caption = f"📢 آگهی جدید شماره {ad_counter}:\n\n" \
               f"🧩 کالکشن: {data['collection']}\n" \
               f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
               f"📝 توضیحات: {data['description']}\n" \
               f"💰 قیمت: {data['price']} تومان\n\n" \
-              f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
+              f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}\n" \
+              f"🆔 کد آگهی: {ad_counter}"
 
     markup = types.InlineKeyboardMarkup()
-    approve_button = types.InlineKeyboardButton("✅ تأیید", callback_data=f"approve_{user_id}")
-    reject_button = types.InlineKeyboardButton("❌ رد", callback_data=f"reject_{user_id}")
+    approve_button = types.InlineKeyboardButton(f"✅ تأیید آگهی {ad_counter}", callback_data=f"approve_{user_id}_{ad_counter}")
+    reject_button = types.InlineKeyboardButton(f"❌ رد آگهی {ad_counter}", callback_data=f"reject_{user_id}_{ad_counter}")
     markup.add(approve_button, reject_button)
+
     bot.send_video(ADMIN_ID, data['video'], caption=caption, reply_markup=markup)
-    bot.send_message(user_id, "آگهی شما برای بررسی به ادمین ارسال شد. پس از تأیید، در کانال منتشر خواهد شد.")
+    bot.send_message(user_id, f"آگهی شما برای بررسی به ادمین ارسال شد.\nکد آگهی شما: {ad_counter}\nپس از تأیید، در کانال منتشر خواهد شد.")
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('approve_') or call.data.startswith('reject_'))
 def handle_admin_response(call):
-    action, user_id_str = call.data.split('_')
-    user_id = int(user_id_str)
+    parts = call.data.split('_')
+    action = parts[0]
+    user_id = int(parts[1])
+    ad_code = parts[2] if len(parts) > 2 else 'نامشخص'
+
     data = user_data.get(user_id)
     if not data:
         bot.answer_callback_query(call.id, "اطلاعات آگهی یافت نشد.")
         return
 
     if action == 'approve':
-        ad_code = data.get('ad_code', 'نامشخص')
-
-        caption = f"📢 آگهی شماره {ad_code} - تأیید شده:\n\n" \
+        caption = f"📢 آگهی تأیید شده شماره {ad_code}:\n\n" \
                   f"🧩 کالکشن: {data['collection']}\n" \
                   f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
                   f"📝 توضیحات: {data['description']}\n" \
-                  f"💰 قیمت: {data['price']} تومان\n\n" \
-                  f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
+                  f"💰 قیمت: {data['price']} تومان\n" \
+                  f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}\n" \
+                  f"🆔 کد آگهی: {ad_code}"
 
-        # دکمه ارتباط با ادمین (باز شدن چت با ادمین)
-        markup = types.InlineKeyboardMarkup()
-        contact_admin_btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
-        markup.add(contact_admin_btn)
+        contact_markup = types.InlineKeyboardMarkup()
+        contact_button = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+        contact_markup.add(contact_button)
 
-        bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
-        bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی شما: {ad_code}\nلطفاً این کد را برای ادمین ارسال کنید.")
+        bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=contact_markup)
+        bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی شما: {ad_code}")
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
     elif action == 'reject':
