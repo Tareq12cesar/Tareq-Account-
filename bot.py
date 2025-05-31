@@ -88,8 +88,7 @@ def send_to_admin(user_id):
               f"🧩 کالکشن: {data['collection']}\n" \
               f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
               f"📝 توضیحات: {data['description']}\n" \
-              f"💰 قیمت: {data['price']} تومان\n\n" \
-              f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
+              f"💰 قیمت: {data['price']} تومان"
 
     markup = types.InlineKeyboardMarkup()
     approve_button = types.InlineKeyboardButton("✅ تأیید آگهی", callback_data=f"approve_{user_id}")
@@ -121,7 +120,6 @@ def handle_admin_response(call):
                   f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
                   f"📝 توضیحات: {data['description']}\n" \
                   f"💰 قیمت: {data['price']} تومان\n" \
-                  f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}\n" \
                   f"🆔 کد آگهی: {ad_code}"
 
         contact_markup = types.InlineKeyboardMarkup()
