@@ -65,13 +65,13 @@ def send_to_admin(message):
               f"📝 توضیحات: {data['description']}\n" \
               f"💰 قیمت: {data['price']} تومان\n\n" \
               f"👤 ارسال‌کننده: @{message.from_user.username or message.from_user.first_name}"
-    markup = types.InlineKeyboardMarkup()
-    approve_button = types.InlineKeyboardButton("✅ تأیید", callback_data=f"approve_{message.chat.id}")
-    reject_button = types.InlineKeyboardButton("❌ رد", callback_data=f"reject_{message.chat.id}")
+        markup = types.InlineKeyboardMarkup()
+    approve_button = types.InlineKeyboardButton("✅ تأیید", callback_data=f"approve_{message.from_user.id}")
+    reject_button = types.InlineKeyboardButton("❌ رد", callback_data=f"reject_{message.from_user.id}")
     markup.add(approve_button, reject_button)
+
     bot.send_video(ADMIN_ID, data['video'], caption=caption, reply_markup=markup)
     bot.send_message(message.chat.id, "آگهی شما برای بررسی به ادمین ارسال شد. پس از تأیید، در کانال منتشر خواهد شد.")
-
 @bot.callback_query_handler(func=lambda call: call.data.startswith('approve_') or call.data.startswith('reject_'))
 def handle_admin_response(call):
     action, user_id = call.data.split('_')
