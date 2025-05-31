@@ -1,236 +1,123 @@
-from telegram import (
-    Update,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    ReplyKeyboardMarkup,
-    KeyboardButton,
-)
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    ContextTypes,
-    MessageHandler,
-    filters,
-    CallbackQueryHandler,
-)
+import telebot
+from telebot import types
+from flask import Flask, request
+import threading
 
-TOKEN = "7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8"
-ADMIN_ID = 6697070308  # آی‌دی ادمین تلگرام تو
+API_TOKEN = '7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
+ADMIN_ID = 6697070308  # آی‌دی عددی ادمین
+CHANNEL_USERNAME = '@filmskina'  # آیدی کانال یا گروه
 
-# متغیر سراسری برای ذخیره آگهی‌های تایید شده
-approved_ads = []
+bot = telebot.TeleBot(API_TOKEN)
+app = Flask(__name__)
 
-# اینجا متغیرها و دیکشنری قیمت‌ها و توضیحات اسکین‌ها (کد قبلی قیمت‌یابی را اینجا قرار بده)
-skin_prices = {
-    "Supreme": 350000,
-    "Grand": 300000,
-    "Exquisite": 150000,
-    "Deluxe": None,  # قیمت دلخواه که در زمان محاسبه داده می‌شود
-}
+ads = []  # لیست ذخیره آگهی‌ها در حافظه
 
-skin_explanations = {
-    "Supreme": "✅ اسکین Supreme یکی از کمیاب‌ترین و گران‌ترین اسکین‌هاست.",
-    "Grand": "✅ اسکین Grand از اسکین‌های ارزشمند بازی است.\n❌ توجه: اسکین‌های رایگان جزو این دسته نیستند.",
-    "Exquisite": "✅ اسکین Exquisite دارای طراحی زیبا و خاص است.\n❌ اسکین‌های رایگان جزو این دسته محسوب نمی‌شوند.",
-    "Deluxe": "✅ اسکین Deluxe بسته به تعداد، قیمت متفاوتی دارد.",
-}
+# ---------- عضویت اجباری ----------
+CHANNEL_ID = '@Mobile_Legend_IR'  # کانال برای عضویت اجباری
 
-# مرحله ثبت آگهی (توالی سوال‌ها)
-advertise_questions = [
-    "لطفاً نام کالکشن خود را وارد کنید:",
-    "اسکین‌های مهم کالکشن را بنویسید:",
-    "توضیح کوتاهی درباره اکانت بدهید:",
-    "قیمت فروش اکانت را به تومان وارد کنید:",
-    "لطفاً ویدئوی اسکین‌ها را ارسال کنید:"
-]
-
-user_advertise_data = {}  # ذخیره موقت اطلاعات ثبت آگهی هر کاربر
-
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    keyboard = [
-        [KeyboardButton("ثبت آگهی"), KeyboardButton("مشاهده آگهی‌ها")],
-    ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    await update.message.reply_text(
-        f"سلام {user.first_name}! خوش آمدی به ربات قیمت‌یاب و ثبت آگهی Mobile Legends.\n"
-        "لطفاً یکی از گزینه‌ها را انتخاب کن:",
-        reply_markup=reply_markup,
-    )
-
-
-# هندلر دکمه‌های منو
-async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    if text == "ثبت آگهی":
-        user_advertise_data[update.effective_user.id] = {
-            "step": 0,
-            "data": {}
-        }
-        await update.message.reply_text(advertise_questions[0])
-    elif text == "مشاهده آگهی‌ها":
-        await view_ads(update, context)
-    else:
-        await update.message.reply_text("لطفاً یکی از گزینه‌های منو را انتخاب کنید.")
-
-
-# هندلر مرحله‌ای ثبت آگهی
-async def advertise_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if user_id not in user_advertise_data:
-        # اگر کاربر در روند ثبت آگهی نیست، چیزی نده
-        return
-
-    step = user_advertise_data[user_id]["step"]
-    data = user_advertise_data[user_id]["data"]
-
-    if step < 4:  # مراحل متنی
-        data_field = ["collection", "key_skins", "description", "price"][step]
-        data[data_field] = update.message.text
-        step += 1
-        user_advertise_data[user_id]["step"] = step
-        if step < 4:
-            await update.message.reply_text(advertise_questions[step])
-        else:
-            await update.message.reply_text(advertise_questions[4])  # درخواست ویدئو
-    else:
-        # مرحله ویدئو
-        if not update.message.video:
-            await update.message.reply_text("لطفاً فقط ویدئو ارسال کنید.")
-            return
-
-        video_file_id = update.message.video.file_id
-        data["video_file_id"] = video_file_id
-
-        # آماده کردن کپشن برای ارسال به ادمین
-        caption = (
-            f"👤 کاربر: {user_id}\n"
-            f"🎯 کالکشن: {data['collection']}\n"
-            f"🌟 اسکین‌های مهم: {data['key_skins']}\n"
-            f"📝 توضیح: {data['description']}\n"
-            f"💰 قیمت فروش: {data['price']}\n"
-        )
-
-        # دکمه‌های تایید و رد برای ادمین
-        keyboard = InlineKeyboardMarkup([
-            [
-                InlineKeyboardButton("✅ تایید", callback_data="ad_approve"),
-                InlineKeyboardButton("❌ رد", callback_data="ad_reject"),
-            ]
-        ])
-
-        # ارسال ویدئو و توضیحات به ادمین
-        await context.bot.send_video(
-            chat_id=ADMIN_ID,
-            video=video_file_id,
-            caption=caption,
-            reply_markup=keyboard,
-        )
-
-        await update.message.reply_text("آگهی شما ارسال شد و در انتظار تایید ادمین است.")
-        # حذف داده‌های موقت کاربر
-        del user_advertise_data[user_id]
-
-
-def extract_ad_info(caption):
+def is_member(user_id):
     try:
-        lines = caption.split('\n')
-        info = {}
-        for line in lines:
-            if line.startswith("👤 کاربر:"):
-                info['user_id'] = int(line.split(":")[1].strip())
-            elif line.startswith("🎯 کالکشن:"):
-                info['collection'] = line.split(":", 1)[1].strip()
-            elif line.startswith("🌟 اسکین‌های مهم:"):
-                info['key_skins'] = line.split(":", 1)[1].strip()
-            elif line.startswith("📝 توضیح:"):
-                info['description'] = line.split(":", 1)[1].strip()
-            elif line.startswith("💰 قیمت فروش:"):
-                info['price'] = line.split(":", 1)[1].strip()
-        return info
-    except Exception:
-        return None
+        member = bot.get_chat_member(CHANNEL_ID, user_id)
+        return member.status in ['member', 'creator', 'administrator']
+    except:
+        return False
 
+# ---------- ثبت آگهی ----------
+user_states = {}
 
-async def admin_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user = query.from_user
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.reply_to(message, "سلام! برای ثبت آگهی، دستور /post رو بزنید.")
 
-    if user.id != ADMIN_ID:
-        await query.edit_message_caption("⚠️ فقط ادمین می‌تواند این آگهی را تایید یا رد کند.")
+@bot.message_handler(commands=['post'])
+def post_ad(message):
+    if not is_member(message.from_user.id):
+        bot.send_message(message.chat.id, f"برای ثبت آگهی، ابتدا عضو کانال {CHANNEL_ID} شوید.")
         return
+    user_states[message.from_user.id] = {'step': 'collection'}
+    bot.send_message(message.chat.id, "نام کالکشن را وارد کنید:")
 
-    callback_data = query.data
-    message = query.message
+@bot.message_handler(content_types=['text', 'video'])
+def handle_message(message):
+    user_id = message.from_user.id
+    state = user_states.get(user_id)
 
-    ad_info = extract_ad_info(message.caption)
-    if not ad_info:
-        await query.edit_message_caption("خطا در خواندن اطلاعات آگهی!")
-        return
+    if state:
+        step = state['step']
 
-    user_id = ad_info.get('user_id')
-    collection = ad_info.get('collection')
-    key_skins = ad_info.get('key_skins')
-    description = ad_info.get('description')
-    price = ad_info.get('price')
-    video_file_id = message.video.file_id
+        if step == 'collection':
+            state['collection'] = message.text
+            state['step'] = 'skins'
+            bot.send_message(message.chat.id, "اسکین‌های مهم را وارد کنید:")
+        elif step == 'skins':
+            state['skins'] = message.text
+            state['step'] = 'description'
+            bot.send_message(message.chat.id, "توضیحات اکانت را وارد کنید:")
+        elif step == 'description':
+            state['description'] = message.text
+            state['step'] = 'price'
+            bot.send_message(message.chat.id, "قیمت فروش را وارد کنید:")
+        elif step == 'price':
+            state['price'] = message.text
+            state['step'] = 'video'
+            bot.send_message(message.chat.id, "یک ویدیو از اسکین‌ها ارسال کنید:")
+        elif step == 'video' and message.content_type == 'video':
+            state['video'] = message.video.file_id
+            ad_id = len(ads) + 1
+            state['ad_id'] = ad_id
+            ads.append(state)
 
-    if callback_data == "ad_approve":
-        approved_ads.append({
-            "user_id": user_id,
-            "collection": collection,
-            "key_skins": key_skins,
-            "description": description,
-            "price": price,
-            "video_file_id": video_file_id,
-        })
-        await query.edit_message_caption("✅ آگهی تایید و ذخیره شد.")
-        try:
-            await context.bot.send_message(user_id, "آگهی شما تایید و منتشر شد.")
-        except:
-            pass
+            # ارسال برای ادمین تایید
+            markup = types.InlineKeyboardMarkup()
+            markup.add(types.InlineKeyboardButton("تایید آگهی", callback_data=f"approve_{ad_id}"),
+                       types.InlineKeyboardButton("رد آگهی", callback_data=f"reject_{ad_id}"))
 
-    elif callback_data == "ad_reject":
-        await query.edit_message_caption("❌ آگهی رد شد.")
-        try:
-            await context.bot.send_message(user_id, "آگهی شما توسط ادمین رد شد.")
-        except:
-            pass
+            ad_text = f"""📌 کالکشن: {state['collection']}
+🌟 اسکین‌های مهم: {state['skins']}
+📝 توضیحات: {state['description']}
+💰 قیمت فروش: {state['price']}"""
 
+            bot.send_video(ADMIN_ID, state['video'], caption=ad_text, reply_markup=markup)
+            bot.send_message(message.chat.id, "آگهی شما ارسال شد و در انتظار تایید ادمین است.")
+            user_states.pop(user_id)
+        else:
+            bot.send_message(message.chat.id, "لطفاً مراحل را به ترتیب انجام دهید.")
+    else:
+        bot.send_message(message.chat.id, "برای ثبت آگهی، دستور /post را بزنید.")
 
-async def view_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    if not approved_ads:
-        await context.bot.send_message(chat_id, "فعلاً آگهی تایید شده‌ای وجود ندارد.")
-        return
+# ---------- تایید یا رد آگهی ----------
+@bot.callback_query_handler(func=lambda call: call.data.startswith('approve_') or call.data.startswith('reject_'))
+def handle_approval(call):
+    ad_id = int(call.data.split('_')[1])
+    ad = next((ad for ad in ads if ad['ad_id'] == ad_id), None)
 
-    for ad in approved_ads:
-        text = (
-            f"🎯 کالکشن: {ad['collection']}\n"
-            f"🌟 اسکین‌های مهم: {ad['key_skins']}\n"
-            f"📝 توضیح: {ad['description']}\n"
-            f"💰 قیمت فروش: {ad['price']}\n"
-        )
-        await context.bot.send_video(chat_id=chat_id, video=ad["video_file_id"], caption=text)
+    if ad:
+        if call.data.startswith('approve_'):
+            # ارسال به کانال
+            ad_text = f"""📌 کالکشن: {ad['collection']}
+🌟 اسکین‌های مهم: {ad['skins']}
+📝 توضیحات: {ad['description']}
+💰 قیمت فروش: {ad['price']}"""
+            bot.send_video(CHANNEL_USERNAME, ad['video'], caption=ad_text)
+            bot.send_message(call.message.chat.id, "✅ آگهی تایید و منتشر شد.")
+            user_id = [k for k, v in user_states.items() if v.get('ad_id') == ad_id]
+            if user_id:
+                bot.send_message(user_id[0], "✅ آگهی شما تایید و منتشر شد.")
+        else:
+            bot.send_message(call.message.chat.id, "❌ آگهی رد شد.")
 
+# ---------- Flask برای وبهوک ----------
+@app.route('/', methods=['POST'])
+def webhook():
+    update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
+    bot.process_new_updates([update])
+    return 'ok', 200
 
-# --- اینجا می‌تونی کد قیمت‌یابی اسکین‌ها و هندلرهای مربوطه رو اضافه کنی --- #
-# برای نمونه ساده:
-async def price_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("سیستم قیمت‌یابی اسکین‌ها به زودی اضافه خواهد شد.")
+def run():
+    app.run(host='0.0.0.0', port=5000)
 
+def start_bot():
+    bot.polling(non_stop=True)
 
-if __name__ == "__main__":
-    app = ApplicationBuilder().token(TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.Regex("^(ثبت آگهی|مشاهده آگهی‌ها)$"), menu_handler))
-    app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, advertise_handler))
-    app.add_handler(CallbackQueryHandler(admin_callback_handler, pattern="ad_.*"))
-    app.add_handler(CommandHandler("view_ads", view_ads))
-    app.add_handler(CommandHandler("price", price_handler))
-
-    print("ربات در حال اجرا است...")
-    app.run_polling()
+threading.Thread(target=run).start()
+threading.Thread(target=start_bot).start()
