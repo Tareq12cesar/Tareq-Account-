@@ -2,7 +2,6 @@ import telebot
 from telebot import types
 from flask import Flask, request
 import threading
-import os
 
 # ======= تنظیمات اولیه =======
 BOT_TOKEN = '7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
@@ -19,11 +18,15 @@ pending_rejections = {}
 def send_menu(chat_id):
     markup = types.InlineKeyboardMarkup()
     post_button = types.InlineKeyboardButton("ثبت آگهی", callback_data='post_ad')
+    request_account_button = types.InlineKeyboardButton("اکانت درخواستی", callback_data='request_account')
     view_button = types.InlineKeyboardButton("مشاهده آگهی‌ها", url=CHANNEL_LINK)
-    price_button = types.InlineKeyboardButton("قیمت یاب اکانت", callback_data='price_finder')
+    price_button = types.InlineKeyboardButton("قیمت‌یاب اکانت", callback_data='price_finder')
+    back_button = types.InlineKeyboardButton("برگشت", callback_data='back_to_menu')
     markup.add(post_button)
+    markup.add(request_account_button)
     markup.add(view_button)
     markup.add(price_button)
+    markup.add(back_button)
     bot.send_message(chat_id, "سلام! از دکمه‌های زیر استفاده کنید:", reply_markup=markup)
 
 # ======= دستور /start و /menu =======
@@ -31,7 +34,18 @@ def send_menu(chat_id):
 def menu_command(message):
     send_menu(message.chat.id)
 
-# ======= سیستم ثبت آگهی =======
+# ======= برگشت به منو =======
+@bot.callback_query_handler(func=lambda call: call.data == 'back_to_menu')
+def back_to_menu(call):
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+    send_menu(call.message.chat.id)
+
+# ======= اکانت درخواستی =======
+@bot.callback_query_handler(func=lambda call: call.data == 'request_account')
+def request_account(call):
+    bot.send_message(call.message.chat.id, "✅ لطفاً اطلاعات اکانت درخواستی خود را به ادمین ارسال کنید: @YourAdminUsername")
+
+# ======= سیستم ثبت آگهی (بدون تغییر) =======
 @bot.callback_query_handler(func=lambda call: call.data == 'post_ad')
 def post_ad(call):
     user_data[call.from_user.id] = {'user_id': call.from_user.id, 'username': call.from_user.username}
