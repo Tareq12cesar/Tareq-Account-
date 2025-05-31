@@ -13,6 +13,7 @@ CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال
 bot = telebot.TeleBot(BOT_TOKEN)
 user_data = {}
 pending_codes = {}
+pending_rejections = {}
 
 # ======= دکمه منو =======
 def send_menu(chat_id):
@@ -76,7 +77,7 @@ def send_to_admin(user_id):
 
     markup = types.InlineKeyboardMarkup()
     approve_button = types.InlineKeyboardButton("✅ تأیید آگهی (وارد کردن کد)", callback_data=f"approve_{user_id}")
-    reject_button = types.InlineKeyboardButton("❌ رد آگهی", callback_data=f"reject_{user_id}")
+    reject_button = types.InlineKeyboardButton("❌ رد آگهی (نوشتن دلیل)", callback_data=f"reject_{user_id}")
     markup.add(approve_button, reject_button)
 
     bot.send_video(ADMIN_ID, data['video'], caption=caption, reply_markup=markup)
@@ -99,33 +100,42 @@ def handle_admin_response(call):
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
     elif action == 'reject':
-        bot.send_message(user_id, "❌ متأسفانه آگهی شما توسط ادمین رد شد.")
+        bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد آگهی را بنویسید:")
+        pending_rejections[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
-@bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID and ADMIN_ID in pending_codes)
-def handle_custom_code(message):
-    code = message.text.strip()
-    pending = pending_codes.pop(ADMIN_ID)
-    user_id = pending['user_id']
+@bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
+def handle_admin_text(message):
+    if ADMIN_ID in pending_codes:
+        code = message.text.strip()
+        pending = pending_codes.pop(ADMIN_ID)
+        user_id = pending['user_id']
 
-    data = user_data.get(user_id)
-    if not data:
-        bot.send_message(ADMIN_ID, "❌ اطلاعات آگهی یافت نشد.")
-        return
+        data = user_data.get(user_id)
+        if not data:
+            bot.send_message(ADMIN_ID, "❌ اطلاعات آگهی یافت نشد.")
+            return
 
-    caption = f"📢 آگهی تأیید شده:\n\n" \
-              f"🧩 کالکشن: {data['collection']}\n" \
-              f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
-              f"📝 توضیحات: {data['description']}\n" \
-              f"💰 قیمت: {data['price']} تومان\n" \
-              f"🆔 کد آگهی: {code}"
+        caption = f"📢 آگهی تأیید شده:\n\n" \
+                  f"🧩 کالکشن: {data['collection']}\n" \
+                  f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
+                  f"📝 توضیحات: {data['description']}\n" \
+                  f"💰 قیمت: {data['price']} تومان\n" \
+                  f"🆔 کد آگهی: {code}"
 
-    contact_markup = types.InlineKeyboardMarkup()
-    contact_button = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
-    contact_markup.add(contact_button)
+        contact_markup = types.InlineKeyboardMarkup()
+        contact_button = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+        contact_markup.add(contact_button)
 
-    bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=contact_markup)
-    bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی شما: {code}\n\nلطفاً این کد را به ادمین ارسال کنید.")
+        bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=contact_markup)
+        bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی شما: {code}\n\nلطفاً این کد را به ادمین ارسال کنید.")
+
+    elif ADMIN_ID in pending_rejections:
+        reason = message.text.strip()
+        pending = pending_rejections.pop(ADMIN_ID)
+        user_id = pending['user_id']
+
+        bot.send_message(user_id, f"❌ متأسفانه آگهی شما توسط ادمین رد شد.\nدلیل: {reason}")
 
 # ======= قیمت‌یاب اکانت =======
 @bot.callback_query_handler(func=lambda call: call.data == 'price_finder')
