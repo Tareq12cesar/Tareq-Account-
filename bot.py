@@ -1,4 +1,4 @@
-app.run_polling()from telegram import (
+from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -13,7 +13,6 @@ from telegram.ext import (
     filters,
     CallbackQueryHandler,
 )
-app.run(host='0.0.0.0', port=8080)
 
 TOKEN = "7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8"
 ADMIN_ID = 6697070308  # آی‌دی ادمین تلگرام تو
