@@ -1,3 +1,18 @@
+from telegram import (
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+)
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+    CallbackQueryHandler,
+)
 from flask import Flask
 import threading
 
@@ -223,7 +238,24 @@ async def get_video(update, context):
         f"💰 قیمت فروش: {context.user_data['ad_price']:,} تومان\n"
         f"\nبرای تایید یا رد، یکی از دکمه‌ها را بزنید:"
     )
+    
+user_advertise_data = {}  # ذخیره موقت اطلاعات ثبت آگهی هر کاربر
 
+async def advertise_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if user_id not in user_advertise_data:
+        # اگر کاربر در روند ثبت آگهی نیست، چیزی نده
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    keyboard = [
+        [KeyboardButton("ثبت آگهی"), KeyboardButton("مشاهده آگهی‌ها")],
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    await update.message.reply_text(
+        f"سلام {user.first_name}! خوش آمدی به ربات قیمت‌یاب و ثبت آگهی Mobile Legends.\n"
+        "لطفاً یکی از گزینه‌ها را انتخاب کن:",
+        reply_markup=reply_markup,
+    )
     keyboard = [
         [
             InlineKeyboardButton("✅ تایید", callback_data="ad_approve"),
