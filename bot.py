@@ -176,15 +176,10 @@ app.add_handler(CallbackQueryHandler(check_membership_button, pattern="check_mem
 # مراحل ثبت آگهی
 COLLECTION, KEY_SKINS, DESCRIPTION, PRICE, VIDEO = range(5)
 
-# لیست آگهی‌های تایید شده (هر آگهی دیکشنری: {'user_id', 'collection', 'key_skins', 'description', 'price', 'video_file_id'})
 approved_ads = []
+ADMIN_ID = 6697070308
 
-ADMIN_ID = 6697070308  # آیدی ادمین
-
-# شروع ثبت آگهی
 async def advertise_start(update, context):
-    user_id = update.effective_user.id
-    # چک عضویت یا هر محدودیتی که لازم داری اینجا می‌تونی اضافه کنی
     await update.message.reply_text("مرحله 1: لطفاً نام کالکشن اکانت خود را وارد کنید:")
     return COLLECTION
 
@@ -219,7 +214,6 @@ async def get_video(update, context):
     video_file_id = update.message.video.file_id
     context.user_data['ad_video'] = video_file_id
 
-    # آماده کردن پیام برای ادمین
     user = update.effective_user
     ad_text = (
         f"🆕 آگهی جدید از کاربر: {user.full_name} (id: {user.id})\n\n"
@@ -238,7 +232,6 @@ async def get_video(update, context):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    # ارسال به ادمین
     await context.bot.send_video(
         chat_id=ADMIN_ID,
         video=video_file_id,
@@ -249,7 +242,6 @@ async def get_video(update, context):
     await update.message.reply_text("آگهی شما به ادمین ارسال شد و پس از تایید نمایش داده خواهد شد.\nبرای شروع دوباره /start را بزنید.")
     return ConversationHandler.END
 
-# هندلر callback ادمین برای تایید یا رد آگهی
 async def admin_callback_handler(update, context):
     query = update.callback_query
     await query.answer()
@@ -262,20 +254,17 @@ async def admin_callback_handler(update, context):
     data = query.data
     message = query.message
 
-    # استخراج اطلاعات آگهی از کپشن پیام
     caption = message.caption
     lines = caption.split('\n')
     try:
-        user_line = lines[1]  # خط با نام کاربر و آیدی
+        user_line = lines[1]
         collection_line = lines[3]
         key_skins_line = lines[4]
         description_line = lines[5]
         price_line = lines[6]
-        # استخراج مقدارها
-        user_name = user_line.split(":")[1].strip().split(' ')[0]
+
         user_id_text = user_line.split("id:")[1].strip().replace(")", "")
         user_id = int(user_id_text)
-
         collection = collection_line.split(":")[1].strip()
         key_skins = key_skins_line.split(":")[1].strip()
         description = description_line.split(":")[1].strip()
@@ -286,7 +275,6 @@ async def admin_callback_handler(update, context):
         return
 
     if data == "ad_approve":
-        # ذخیره آگهی در لیست تایید شده‌ها
         approved_ads.append({
             'user_id': user_id,
             'collection': collection,
@@ -296,7 +284,6 @@ async def admin_callback_handler(update, context):
             'video_file_id': message.video.file_id
         })
         await query.edit_message_caption("✅ آگهی تایید و ذخیره شد.")
-        # به کاربر ارسال کن که آگهیش تایید شد (اختیاری)
         try:
             await context.bot.send_message(user_id, "آگهی شما تایید و منتشر شد.")
         except:
@@ -309,63 +296,19 @@ async def admin_callback_handler(update, context):
         except:
             pass
 
-# نمایش آگهی‌های تایید شده به کاربر
-async def show_ads(update, context):
-    if not approved_ads:
-        await update.message.reply_text("فعلاً هیچ آگهی تایید شده‌ای وجود ندارد.")
-        return
-
-    for ad in approved_ads:
-        text = (
-            f"🎯 کالکشن: {ad['collection']}\n"
-            f"🌟 اسکین‌های مهم: {ad['key_skins']}\n"
-            f"📝 توضیح: {ad['description']}\n"
-            f"💰 قیمت فروش: {ad['price']:,} تومان"
-        )
-        await context.bot.send_video(
-            chat_id=update.effective_chat.id,
-            video=ad['video_file_id'],
-            caption=text
-        )
-
-# اضافه کردن دکمه نمایش آگهی‌ها در منو
-from telegram import ReplyKeyboardMarkup
-
-async def menu_with_ads(update, context):
-    keyboard = [
-        ['Supreme', 'Grand'],
-        ['Exquisite', 'Deluxe'],
-        ['نمایش آگهی‌ها'],
-        ['پایان']
-    ]
-    await update.message.reply_text(
-        "لطفاً یک اسکین انتخاب کن یا 'نمایش آگهی‌ها' رو بزن:",
-        reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    )
-
-# برای تغییر در start یا choose_skin می‌تونی به جای ارسال کیبورد قبلی از این استفاده کنی
-# (فقط اگر خواستی دکمه نمایش آگهی‌ها تو منو باشه)
-
-# --- ثبت هندلرها ---
-
 advertise_conv = ConversationHandler(
-    entry_points=[CommandHandler("advertise", start_advertise)],
+    entry_points=[CommandHandler("advertise", advertise_start)],
     states={
-        ASK_COLLECTION_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_key_skins)],
-        ASK_KEY_SKINS: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_description)],
-        ASK_DESCRIPTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_price)],
-        ASK_PRICE: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_video)],
-        ASK_VIDEO: [MessageHandler(filters.VIDEO | filters.Document.VIDEO, save_ad)],
+        COLLECTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_collection)],
+        KEY_SKINS: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_key_skins)],
+        DESCRIPTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_description)],
+        PRICE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_price)],
+        VIDEO: [MessageHandler(filters.VIDEO | filters.Document.VIDEO, get_video)],
     },
     fallbacks=[],
 )
 
 app.add_handler(advertise_conv)
 app.add_handler(CallbackQueryHandler(admin_callback_handler, pattern="ad_"))
-app.add_handler(MessageHandler(filters.Regex('^نمایش آگهی‌ها$'), show_ads))
-
-# اگر خواستی منو رو با دکمه نمایش آگهی‌ها جایگزین کنی، اینو به جای کیبورد قبلی در start یا choose_skin بفرست:
-# await menu_with_ads(update, context)
-
 
 app.run_polling()
