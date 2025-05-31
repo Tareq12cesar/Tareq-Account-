@@ -159,7 +159,7 @@ async def show_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("برای شروع دوباره /start رو بزن.")
     return ConversationHandler.END
 
-app = ApplicationBuilder().token("7933020801:AAHaBEa43nikjSSNj_qKZ0L27r3ooJV6UDI").build()
+app = ApplicationBuilder().token("7933020801:AAF0pxmqcgOU_RM_lWzIvo5jAJA1B7geYso").build()
 
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler("start", start)],
