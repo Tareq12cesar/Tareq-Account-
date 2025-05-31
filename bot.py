@@ -14,9 +14,6 @@ bot.set_my_commands([
 
 # ======= منوی اصلی =======
 @bot.message_handler(commands=['start'])
-def start(message):
-    bot.send_message(message.chat.id, "سلام! برای استفاده از امکانات، روی علامت 📋 پایین چت بزن و دکمه‌ها رو انتخاب کن.\nیا دستور /menu رو تایپ کن.")
-@bot.message_handler(commands=['menu'])
 def show_menu(message):
     markup = types.InlineKeyboardMarkup()
     post_button = types.InlineKeyboardButton("ثبت آگهی", callback_data='post_ad')
@@ -27,6 +24,10 @@ def show_menu(message):
     markup.add(price_button)
     bot.send_message(message.chat.id, "سلام! از دکمه‌های زیر استفاده کنید:", reply_markup=markup)
 # ======= سیستم ثبت آگهی =======
+def start(message):
+    bot.send_message(message.chat.id, "سلام! برای استفاده از امکانات، روی علامت 📋 پایین چت بزن و دکمه‌ها رو انتخاب کن.\nیا دستور /menu رو تایپ کن.")
+@bot.message_handler(commands=['menu'])
+
 user_data = {}
 
 @bot.callback_query_handler(func=lambda call: call.data == 'post_ad')
