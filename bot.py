@@ -119,7 +119,7 @@ def calculate_price(message):
 # ======= اجرای ربات =======
 from flask import Flask, request
 
-app = Flask(name)
+app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def index():
