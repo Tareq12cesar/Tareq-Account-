@@ -2,7 +2,6 @@ import telebot
 from telebot import types
 from flask import Flask, request
 import threading
-import os
 
 # ======= تنظیمات اولیه =======
 BOT_TOKEN = '7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
@@ -15,37 +14,43 @@ user_data = {}
 pending_codes = {}
 pending_rejections = {}
 
-# ======= اضافه کردن دکمه منوی شناور =======
-def set_menu_button(chat_id):
-    menu_buttons = types.MenuButtonWebApp(text="منو", web_app=types.WebAppInfo(url="https://t.me/filmskina"))
-    bot.set_chat_menu_button(chat_id=chat_id, menu_button=menu_buttons)
-
 # ======= دکمه منو =======
 def send_menu(chat_id):
-    markup = types.InlineKeyboardMarkup()
-    post_button = types.InlineKeyboardButton("ثبت آگهی", callback_data='post_ad')
-    view_button = types.InlineKeyboardButton("مشاهده آگهی‌ها", url=CHANNEL_LINK)
-    price_button = types.InlineKeyboardButton("قیمت یاب اکانت", callback_data='price_finder')
-    back_button = types.InlineKeyboardButton("بازگشت به منوی اصلی", callback_data='menu')
-    markup.add(post_button)
-    markup.add(view_button)
-    markup.add(price_button)
-    markup.add(back_button)
-    bot.send_message(chat_id, "سلام! از دکمه‌های زیر استفاده کنید:", reply_markup=markup)
-    set_menu_button(chat_id)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    markup.add(
+        types.KeyboardButton("ثبت آگهی"),
+        types.KeyboardButton("اکانت درخواستی"),
+        types.KeyboardButton("مشاهده آگهی‌ها"),
+        types.KeyboardButton("قیمت یاب اکانت"),
+        types.KeyboardButton("بازگشت")
+    )
+    bot.send_message(chat_id, "سلام! از منو زیر گزینه مورد نظر را انتخاب کنید:", reply_markup=markup)
 
 # ======= دستور /start و /menu =======
 @bot.message_handler(commands=['start', 'menu'])
 def menu_command(message):
     send_menu(message.chat.id)
 
-# ======= سیستم ثبت آگهی =======
-@bot.callback_query_handler(func=lambda call: call.data == 'post_ad')
-def post_ad(call):
-    user_data[call.from_user.id] = {'user_id': call.from_user.id, 'username': call.from_user.username}
-    bot.send_message(call.message.chat.id, "لطفاً نام کالکشن خود را وارد کنید:")
-    bot.register_next_step_handler(call.message, get_collection)
+# ======= هندل کردن دکمه‌ها =======
+@bot.message_handler(func=lambda message: message.text in ["ثبت آگهی", "اکانت درخواستی", "مشاهده آگهی‌ها", "قیمت یاب اکانت", "بازگشت"])
+def handle_buttons(message):
+    if message.text == "ثبت آگهی":
+        user_data[message.from_user.id] = {'user_id': message.from_user.id, 'username': message.from_user.username}
+        bot.send_message(message.chat.id, "لطفاً نام کالکشن خود را وارد کنید:")
+        bot.register_next_step_handler(message, get_collection)
+    elif message.text == "اکانت درخواستی":
+        bot.send_message(message.chat.id, "✅ لطفاً مشخصات اکانت درخواستی خود را بنویسید. (مثال: کالکشن، تعداد اسکین‌ها و بودجه تقریبی)")
+    elif message.text == "مشاهده آگهی‌ها":
+        bot.send_message(message.chat.id, f"✅ برای مشاهده آگهی‌های ثبت‌شده، به کانال زیر مراجعه کنید:\n{CHANNEL_LINK}")
+    elif message.text == "قیمت یاب اکانت":
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add("Supreme", "Grand", "Exquisite", "Deluxe")
+        bot.send_message(message.chat.id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
+        bot.register_next_step_handler(message, calculate_price)
+    elif message.text == "بازگشت":
+        send_menu(message.chat.id)
 
+# ======= سیستم ثبت آگهی =======
 def get_collection(message):
     user_data[message.chat.id]['collection'] = message.text
     bot.send_message(message.chat.id, "لطفاً اسکین‌های مهم اکانت را وارد کنید:")
@@ -146,13 +151,6 @@ def handle_admin_text(message):
         bot.send_message(user_id, f"❌ متأسفانه آگهی شما توسط ادمین رد شد.\nدلیل: {reason}")
 
 # ======= قیمت‌یاب اکانت =======
-@bot.callback_query_handler(func=lambda call: call.data == 'price_finder')
-def price_finder(call):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    markup.add("Supreme", "Grand", "Exquisite", "Deluxe")
-    bot.send_message(call.message.chat.id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
-    bot.register_next_step_handler(call.message, calculate_price)
-
 def calculate_price(message):
     skin_type = message.text
     prices = {
@@ -164,8 +162,10 @@ def calculate_price(message):
     price = prices.get(skin_type)
     if price:
         bot.send_message(message.chat.id, f"✅ قیمت تقریبی هر اسکین {skin_type}: {price} تومان", reply_markup=types.ReplyKeyboardRemove())
+        send_menu(message.chat.id)
     else:
         bot.send_message(message.chat.id, "❌ نوع اسکین معتبر نیست. لطفاً مجدداً تلاش کنید.", reply_markup=types.ReplyKeyboardRemove())
+        send_menu(message.chat.id)
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
