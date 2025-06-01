@@ -167,26 +167,20 @@ def handle_admin_text(message):
 
 # ======= قیمت‌یاب اکانت =======
 
-def send_skin_selection_menu(chat_id):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=2)
-    markup.add("Supreme", "Grand", "Exquisite", "Deluxe", "قیمت نهایی", "بازگشت")
-    bot.send_message(chat_id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید یا روی «قیمت نهایی» بزنید:", reply_markup=markup)
-
-@bot.message_handler(func=lambda message: message.text in ["Supreme", "Grand", "Exquisite", "Deluxe", "قیمت نهایی", "بازگشت"])
 def calculate_price(message):
     if check_back(message):
         return
 
     text = message.text.strip()
+    chat_id = message.chat.id
 
     if text == "قیمت نهایی":
-        if message.chat.id not in user_data or 'skin_type' not in user_data[message.chat.id] or 'skin_count' not in user_data[message.chat.id]:
-            bot.send_message(message.chat.id, "❌ اطلاعات کافی برای محاسبه قیمت وجود ندارد. لطفاً ابتدا نوع اسکین و تعداد را انتخاب کنید.")
-            send_skin_selection_menu(message.chat.id)
+        if chat_id not in user_data or 'counts' not in user_data[chat_id] or not user_data[chat_id]['counts']:
+            bot.send_message(chat_id, "❌ اطلاعات کافی برای محاسبه قیمت وجود ندارد. لطفاً ابتدا نوع اسکین و تعداد را انتخاب کنید.")
+            send_skin_selection_menu(chat_id)
             return
         
-        skin_type = user_data[message.chat.id]['skin_type']
-        count = user_data[message.chat.id]['skin_count']
+        counts = user_data[chat_id]['counts']
 
         fixed_prices = {
             "Supreme": 1200000,
@@ -194,34 +188,34 @@ def calculate_price(message):
             "Exquisite": 300000
         }
 
-        if skin_type in fixed_prices:
-            total_price = fixed_prices[skin_type] * count
-        else:  # Deluxe
-            if count < 20:
-                total_price = 25000 * count
-            elif 20 <= count <= 39:
-                total_price = 500000
-            else:
-                total_price = 700000
+        total_price = 0
+        for skin_type, count in counts.items():
+            if skin_type in fixed_prices:
+                total_price += fixed_prices[skin_type] * count
+            else:  # Deluxe
+                if count < 20:
+                    total_price += 25000 * count
+                elif 20 <= count <= 39:
+                    total_price += 500000
+                else:
+                    total_price += 700000
 
         final_message = (
-            f"💰 قیمت کل اسکین‌های {skin_type} شما:\n\n"
-            f"تعداد اسکین‌ها: {count}\n"
-            f"💵 مبلغ کل: {total_price:,} تومان\n\n"
-            "💡 قیمت بالا ارزش اکانت شماست\n"
-            "برای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید."
+            f"💰 قیمت کل اسکین‌های شما:\n\n"
+            + "\n".join([f"{stype}: تعداد {cnt}" for stype, cnt in counts.items()]) + "\n\n"
+            + f"💵 مبلغ کل: {total_price:,} تومان\n\n"
+            + "💡 قیمت بالا ارزش اکانت شماست\n"
+            + "برای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید."
         )
-        bot.send_message(message.chat.id, final_message)
-        send_skin_selection_menu(message.chat.id)
+        bot.send_message(chat_id, final_message)
+        send_skin_selection_menu(chat_id)
         return
 
     valid_skin_types = ["Supreme", "Grand", "Exquisite", "Deluxe"]
     if text in valid_skin_types:
-        if message.chat.id in user_data:
-            user_data[message.chat.id]['skin_type'] = text
-            user_data[message.chat.id]['skin_count'] = None
-        else:
-            user_data[message.chat.id] = {'skin_type': text, 'skin_count': None}
+        if chat_id not in user_data:
+            user_data[chat_id] = {'counts': {}}
+        user_data[chat_id]['current_skin_type'] = text  # ذخیره موقت برای مرحله دریافت تعداد
 
         explanations = {
             "Supreme": "✅ این دسته شامل اسکین‌های لجند می‌باشد.\n\nچندتا اسکین از این دسته داری؟",
@@ -229,31 +223,41 @@ def calculate_price(message):
             "Exquisite": "✅ این دسته شامل اسکین‌های کالکتور، لاکی باکس و کلادز می‌باشد (اسکین‌های پرایم در این قسمت وارد کنید).\n\n❌ توجه داشته باشید اسکین‌های رایگان این دسته مثل ناتالیا و... رو حساب نکنید.\n\nچندتا اسکین از این دسته داری؟",
             "Deluxe": "✅ این دسته شامل اسکین‌های زودیاک، لایتبورن، اپیک شاپ و... می‌باشد.\n\nچندتا اسکین از این دسته داری؟"
         }
-        bot.send_message(message.chat.id, explanations[text])
+        bot.send_message(chat_id, explanations[text])
         bot.register_next_step_handler(message, get_skin_count)
         return
 
-    bot.send_message(message.chat.id, "❌ لطفاً از دکمه‌ها استفاده کنید.")
-    send_skin_selection_menu(message.chat.id)
+    bot.send_message(chat_id, "❌ لطفاً از دکمه‌ها استفاده کنید.")
+    send_skin_selection_menu(chat_id)
 
 def get_skin_count(message):
+    chat_id = message.chat.id
     try:
         count = int(message.text.strip())
         if count < 0:
             raise ValueError()
     except Exception:
-        bot.send_message(message.chat.id, "❌ لطفاً فقط عدد مثبت وارد کنید. چندتا اسکین داری؟")
+        bot.send_message(chat_id, "❌ لطفاً فقط عدد مثبت وارد کنید. چندتا اسکین داری؟")
         bot.register_next_step_handler(message, get_skin_count)
         return
 
-    skin_type = user_data[message.chat.id]['skin_type']
-    user_data[message.chat.id]['skin_count'] = count
+    skin_type = user_data[chat_id].get('current_skin_type')
+    if not skin_type:
+        bot.send_message(chat_id, "❌ خطا در دریافت نوع اسکین. لطفاً دوباره انتخاب کنید.")
+        send_skin_selection_menu(chat_id)
+        return
+
+    if 'counts' not in user_data[chat_id]:
+        user_data[chat_id]['counts'] = {}
+
+    user_data[chat_id]['counts'][skin_type] = count
+    user_data[chat_id]['current_skin_type'] = None
 
     bot.send_message(
-        message.chat.id,
+        chat_id,
         "✅ اطلاعات ثبت شد.\n\nلطفاً نوع اسکین‌های خود را انتخاب کنید یا دکمه «قیمت نهایی» را بزنید."
     )
-    send_skin_selection_menu(message.chat.id)
+    send_skin_selection_menu(chat_id)
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
