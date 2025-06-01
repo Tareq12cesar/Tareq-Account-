@@ -170,58 +170,79 @@ def calculate_price(message):
     if check_back(message): return
     skin_type = message.text
 
-    if skin_type == "Supreme":
-        bot.send_message(message.chat.id, "✅ اسکین‌های Supreme هر کدام به ارزش تقریبی ۱,۲۰۰,۰۰۰ تومان محاسبه می‌شوند.\n❌ اسکین‌های رایگان در این بخش لحاظ نمی‌شوند.")
-        bot.send_message(message.chat.id, "✅ لطفاً تعداد اسکین‌های Supreme خود را وارد کنید:")
-        bot.register_next_step_handler(message, lambda msg: process_skin_count(msg, skin_type))
+    if skin_type in ["Supreme", "Grand", "Exquisite", "Deluxe"]:
+        user_id = message.chat.id
+        user_data.setdefault(user_id, {"Supreme": 0, "Grand": 0, "Exquisite": 0, "Deluxe": 0})
 
-    elif skin_type == "Grand":
-        bot.send_message(message.chat.id, "✅ اسکین‌های Grand هر کدام به ارزش تقریبی ۵۰۰,۰۰۰ تومان محاسبه می‌شوند.\n❌ اسکین‌های رایگان در این بخش لحاظ نمی‌شوند.")
-        bot.send_message(message.chat.id, "✅ لطفاً تعداد اسکین‌های Grand خود را وارد کنید:")
-        bot.register_next_step_handler(message, lambda msg: process_skin_count(msg, skin_type))
+        if skin_type == "Supreme":
+            explanation = "✅ اسکین‌های Supreme هر کدام به ارزش تقریبی ۱,۲۰۰,۰۰۰ تومان محاسبه می‌شوند.\n❌ اسکین‌های رایگان در این بخش لحاظ نمی‌شوند."
+        elif skin_type == "Grand":
+            explanation = "✅ اسکین‌های Grand هر کدام به ارزش تقریبی ۵۰۰,۰۰۰ تومان محاسبه می‌شوند.\n❌ اسکین‌های رایگان در این بخش لحاظ نمی‌شوند."
+        elif skin_type == "Exquisite":
+            explanation = "✅ اسکین‌های Exquisite هر کدام به ارزش تقریبی ۳۰۰,۰۰۰ تومان محاسبه می‌شوند.\n❌ اسکین‌های رایگان در این بخش لحاظ نمی‌شوند."
+        else:
+            explanation = "✅ اسکین‌های Deluxe به‌صورت زیر محاسبه می‌شوند:\n- کمتر از ۲۰ اسکین: هر اسکین ۲۵۰,۰۰۰ تومان\n- بین ۲۰ تا ۴۰ اسکین: ۵۰۰,۰۰۰ تومان ثابت\n- بالای ۴۰ اسکین: ۷۰۰,۰۰۰ تومان ثابت"
 
-    elif skin_type == "Exquisite":
-        bot.send_message(message.chat.id, "✅ اسکین‌های Exquisite هر کدام به ارزش تقریبی ۳۰۰,۰۰۰ تومان محاسبه می‌شوند.\n❌ اسکین‌های رایگان در این بخش لحاظ نمی‌شوند.")
-        bot.send_message(message.chat.id, "✅ لطفاً تعداد اسکین‌های Exquisite خود را وارد کنید:")
+        bot.send_message(user_id, explanation)
+        bot.send_message(user_id, f"✅ لطفاً تعداد اسکین‌های {skin_type} خود را وارد کنید:")
         bot.register_next_step_handler(message, lambda msg: process_skin_count(msg, skin_type))
-
-    elif skin_type == "Deluxe":
-        bot.send_message(message.chat.id, "✅ اسکین‌های Deluxe به‌صورت زیر محاسبه می‌شوند:\n- کمتر از ۲۰ اسکین: هر اسکین ۲۵۰,۰۰۰ تومان\n- بین ۲۰ تا ۴۰ اسکین: ۵۰۰,۰۰۰ تومان ثابت\n- بالای ۴۰ اسکین: ۷۰۰,۰۰۰ تومان ثابت")
-        bot.send_message(message.chat.id, "✅ لطفاً تعداد اسکین‌های Deluxe خود را وارد کنید:")
-        bot.register_next_step_handler(message, lambda msg: process_skin_count(msg, skin_type))
-
     else:
         bot.send_message(message.chat.id, "❌ نوع اسکین معتبر نیست. لطفاً مجدداً انتخاب کنید.")
         send_menu(message.chat.id)
 
+# ثبت تعداد اسکین‌ها و نمایش دکمه تایید
 def process_skin_count(message, skin_type):
     if check_back(message): return
+    user_id = message.chat.id
     try:
         count = int(message.text)
         if count < 0:
             raise ValueError
     except ValueError:
-        bot.send_message(message.chat.id, "❌ لطفاً یک عدد معتبر وارد کنید.")
+        bot.send_message(user_id, "❌ لطفاً یک عدد معتبر وارد کنید.")
         bot.register_next_step_handler(message, lambda msg: process_skin_count(msg, skin_type))
         return
 
-    price = 0
-    if skin_type == "Supreme":
-        price = count * 1200000
-    elif skin_type == "Grand":
-        price = count * 500000
-    elif skin_type == "Exquisite":
-        price = count * 300000
-    elif skin_type == "Deluxe":
-        if count < 20:
-            price = count * 250000
-        elif 20 <= count <= 40:
-            price = 500000
-        else:
-            price = 700000
+    user_data[user_id][skin_type] = count
+    
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    markup.add("✅ تأیید و ادامه", "📊 نمایش قیمت نهایی")
+    bot.send_message(user_id, f"✅ تعداد {skin_type} ذخیره شد. برای ادامه انتخاب، دکمه تأیید را بزنید یا برای مشاهده قیمت نهایی، دکمه نمایش قیمت نهایی را انتخاب کنید.", reply_markup=markup)
+    bot.register_next_step_handler(message, handle_next_action)
 
-    bot.send_message(message.chat.id, f"✅ ارزش تقریبی اسکین‌های {skin_type} شما: {price:,} تومان\n\n💎 قیمت بالا ارزش اکانت شماست.\nبرای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید.", reply_markup=types.ReplyKeyboardRemove())
-    send_menu(message.chat.id)
+# مدیریت دکمه‌ها بعد از تایید
+def handle_next_action(message):
+    if check_back(message): return
+    if message.text == "✅ تأیید و ادامه":
+        send_menu(message.chat.id)
+    elif message.text == "📊 نمایش قیمت نهایی":
+        show_final_price(message)
+    else:
+        bot.send_message(message.chat.id, "❌ انتخاب نامعتبر. لطفاً مجدداً انتخاب کنید.")
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add("✅ تأیید و ادامه", "📊 نمایش قیمت نهایی")
+        bot.send_message(message.chat.id, "لطفاً دکمه موردنظر را انتخاب کنید:", reply_markup=markup)
+        bot.register_next_step_handler(message, handle_next_action)
+
+# محاسبه و نمایش قیمت نهایی
+def show_final_price(message):
+    user_id = message.chat.id
+    data = user_data.get(user_id, {"Supreme": 0, "Grand": 0, "Exquisite": 0, "Deluxe": 0})
+
+    total_price = 0
+    total_price += data["Supreme"] * 1200000
+    total_price += data["Grand"] * 500000
+    total_price += data["Exquisite"] * 300000
+
+    deluxe_count = data["Deluxe"]
+    if deluxe_count < 20:
+        total_price += deluxe_count * 250000
+    elif 20 <= deluxe_count <= 40:
+        total_price += 500000
+    elif deluxe_count > 40:
+        total_price += 700000
+
+    bot.send_message(user_id, f"✅ ارزش تقریبی اسکین‌های شما: {total_price:,} تومان\n\n💎 قیمت بالا ارزش اکانت شماست.\nبرای ثبت آگهی
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
