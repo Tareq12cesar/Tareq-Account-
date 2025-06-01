@@ -167,7 +167,12 @@ def handle_admin_text(message):
 
 # ======= قیمت‌یاب اکانت =======
 
-markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
+def send_skin_selection_menu(chat_id):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=2)
+    markup.add("Supreme", "Grand", "Exquisite", "Deluxe", "قیمت نهایی", "بازگشت")
+    bot.send_message(chat_id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید یا روی «قیمت نهایی» بزنید:", reply_markup=markup)
+
+@bot.message_handler(func=lambda message: message.text in ["Supreme", "Grand", "Exquisite", "Deluxe", "قیمت نهایی", "بازگشت"])
 def calculate_price(message):
     if check_back(message):
         return
@@ -212,10 +217,9 @@ def calculate_price(message):
 
     valid_skin_types = ["Supreme", "Grand", "Exquisite", "Deluxe"]
     if text in valid_skin_types:
-        # پاک کردن skin_count قبلی اگر وجود داشت
         if message.chat.id in user_data:
-            user_data[message.chat.id]['skin_count'] = None
             user_data[message.chat.id]['skin_type'] = text
+            user_data[message.chat.id]['skin_count'] = None
         else:
             user_data[message.chat.id] = {'skin_type': text, 'skin_count': None}
 
@@ -247,7 +251,7 @@ def get_skin_count(message):
 
     bot.send_message(
         message.chat.id,
-        "✅ اطلاعات ثبت شد.\n\nلطفاً نوع اسکین‌های خود را انتخاب کنید یا دکمه قیمت نهایی را بزنید."
+        "✅ اطلاعات ثبت شد.\n\nلطفاً نوع اسکین‌های خود را انتخاب کنید یا دکمه «قیمت نهایی» را بزنید."
     )
     send_skin_selection_menu(message.chat.id)
 
