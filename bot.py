@@ -171,14 +171,18 @@ from telebot import types
 user_data = {}
 
 def send_skin_selection_menu(chat_id):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=1)
-    markup.add("Supreme")
-    markup.add("Grand")
-    markup.add("Exquisite")
-    markup.add("Deluxe")
-    markup.add("قیمت نهایی")
-    markup.add("بازگشت")
-    bot.send_message(chat_id, "لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
+    # پاک کردن کیبورد قبلی (اختیاری، برای اطمینان)
+bot.send_message(chat_id, "یک لحظه...", reply_markup=types.ReplyKeyboardRemove())
+
+# ایجاد کیبورد جدید ستونی
+markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=1)
+markup.add("Supreme")
+markup.add("Grand")
+markup.add("Exquisite")
+markup.add("Deluxe")
+markup.add("قیمت نهایی")
+markup.add("بازگشت")
+bot.send_message(chat_id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text in ["Supreme", "Grand", "Exquisite", "Deluxe", "قیمت نهایی", "بازگشت"])
 def calculate_price(message):
