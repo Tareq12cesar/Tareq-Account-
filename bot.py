@@ -5,8 +5,8 @@ import threading
 
 TOKEN = '7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
 ADMIN_ID = 6697070308  # شناسه ادمین
-CHANNEL_USERNAME = '@TareqMlbb'  # کانال جوین اجباری
-CHANNEL_LINK = 'https://t.me/filmskina'
+CHANNEL_USERNAME = '@filmskina'  # کانال جوین اجباری
+CHANNEL_LINK = 'https://t.me/TareqMlbb'
 
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
