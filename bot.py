@@ -6,8 +6,9 @@ import threading
 # ======= تنظیمات اولیه =======
 BOT_TOKEN = '7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
 ADMIN_ID = 6697070308  # آیدی عددی ادمین
-CHANNEL_USERNAME = '@filmskina'  # یوزرنیم کانال
+CHANNEL_USERNAME = '@filmskina'  # یوزرنیم کانال برای مشاهده آگهی‌ها
 CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال
+POST_CHANNEL_USERNAME = '@filmskina'  # کانالی که میخوای آگهی تأیید شده اونجا بره (مثلاً @yourchannel)
 
 bot = telebot.TeleBot(BOT_TOKEN)
 user_data = {}
@@ -155,7 +156,10 @@ def handle_admin_text(message):
         contact_button = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
         contact_markup.add(contact_button)
 
-        bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=contact_markup)
+        # ارسال به کانال مخصوص آگهی‌ها
+        bot.send_video(POST_CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=contact_markup)
+
+        # اطلاع به کاربر
         bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی شما: {code}\n\nلطفاً این کد را به ادمین ارسال کنید.")
 
     elif ADMIN_ID in pending_rejections:
