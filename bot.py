@@ -8,7 +8,7 @@ BOT_TOKEN = '7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
 ADMIN_ID = 6697070308  # آیدی عددی ادمین
 CHANNEL_USERNAME = '@filmskina'  # یوزرنیم کانال برای مشاهده آگهی‌ها
 CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال
-POST_CHANNEL_USERNAME = '@filmskina'  # کانالی که میخوای آگهی تأیید شده اونجا بره (مثلاً @yourchannel)
+POST_CHANNEL_USERNAME = '6697070308'  # کانالی که میخوای آگهی تأیید شده اونجا بره (مثلاً @yourchannel)
 
 bot = telebot.TeleBot(BOT_TOKEN)
 user_data = {}
