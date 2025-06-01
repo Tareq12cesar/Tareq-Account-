@@ -10,8 +10,17 @@ CHANNEL_USERNAME = '@filmskina'  # یوزرنیم کانال
 CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال
 
 bot = telebot.TeleBot(BOT_TOKEN)
+
+# ذخیره داده‌های کاربر هنگام ثبت آگهی
 user_data = {}
+
+# ذخیره آگهی‌های تایید شده برای نمایش داخل ربات
+approved_ads = []
+
+# ذخیره آگهی‌هایی که منتظر کد تایید هستند
 pending_codes = {}
+
+# ذخیره آگهی‌هایی که منتظر دلیل رد هستند
 pending_rejections = {}
 
 # ======= دکمه منو =======
@@ -38,18 +47,37 @@ def handle_buttons(message):
         user_data[message.from_user.id] = {'user_id': message.from_user.id, 'username': message.from_user.username}
         bot.send_message(message.chat.id, "لطفاً نام کالکشن خود را وارد کنید:")
         bot.register_next_step_handler(message, get_collection)
+
     elif message.text == "اکانت درخواستی":
         bot.send_message(message.chat.id, "لطفاً مشخصات اکانتی که مدنظر دارید، با حداکثر قیمتی که می‌خواید هزینه کنید را ارسال کنید.")
+
     elif message.text == "مشاهده آگهی‌ها":
-        markup = types.InlineKeyboardMarkup()
-        channel_button = types.InlineKeyboardButton("🔗 رفتن به کانال آگهی‌ها", url=CHANNEL_LINK)
-        markup.add(channel_button)
-        bot.send_message(message.chat.id, "✅ برای مشاهده آگهی‌های ثبت‌شده، روی دکمه زیر کلیک کنید:", reply_markup=markup)
+        if not approved_ads:
+            bot.send_message(message.chat.id, "فعلاً آگهی ثبت شده‌ای وجود ندارد.")
+            return
+
+        # نمایش آگهی‌ها داخل ربات
+        for ad in approved_ads:
+            caption = f"📢 آگهی:\n\n" \
+                      f"🧩 کالکشن: {ad['collection']}\n" \
+                      f"🎮 اسکین‌های مهم: {ad['key_skins']}\n" \
+                      f"📝 توضیحات: {ad['description']}\n" \
+                      f"💰 قیمت: {ad['price']} تومان\n" \
+                      f"🆔 کد آگهی: {ad['code']}\n" \
+                      f"👤 ارسال‌کننده: @{ad['username'] or 'نامشخص'}"
+
+            contact_markup = types.InlineKeyboardMarkup()
+            contact_button = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+            contact_markup.add(contact_button)
+
+            bot.send_video(message.chat.id, ad['video'], caption=caption, reply_markup=contact_markup)
+
     elif message.text == "قیمت یاب اکانت":
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
         markup.add("Supreme", "Grand", "Exquisite", "Deluxe")
         bot.send_message(message.chat.id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
         bot.register_next_step_handler(message, calculate_price)
+
     elif message.text == "بازگشت":
         send_menu(message.chat.id)
 
@@ -99,6 +127,7 @@ def send_to_admin(user_id):
     bot.send_video(ADMIN_ID, data['video'], caption=caption, reply_markup=markup)
     bot.send_message(user_id, "آگهی شما برای بررسی به ادمین ارسال شد.\nپس از تأیید، در کانال منتشر خواهد شد.")
 
+# ======= مدیریت تایید و رد آگهی توسط ادمین =======
 @bot.callback_query_handler(func=lambda call: call.data.startswith('approve_') or call.data.startswith('reject_'))
 def handle_admin_response(call):
     parts = call.data.split('_')
@@ -143,7 +172,20 @@ def handle_admin_text(message):
         contact_button = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
         contact_markup.add(contact_button)
 
+        # ارسال آگهی به کانال
         bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=contact_markup)
+
+        # ذخیره آگهی تایید شده داخل ربات برای نمایش بعدی
+        approved_ads.append({
+            'collection': data['collection'],
+            'key_skins': data['key_skins'],
+            'description': data['description'],
+            'price': data['price'],
+            'video': data['video'],
+            'username': data['username'],
+            'code': code
+        })
+
         bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی شما: {code}\n\nلطفاً این کد را به ادمین ارسال کنید.")
 
     elif ADMIN_ID in pending_rejections:
