@@ -166,66 +166,94 @@ def handle_admin_text(message):
         bot.send_message(user_id, f"❌ متأسفانه آگهی شما توسط ادمین رد شد.\nدلیل: {reason}")
 
 # ======= قیمت‌یاب اکانت =======
+# فرض بر این است که bot و user_data از قبل تعریف شده‌اند
+user_data = {}
+
+def send_skin_selection_menu(chat_id):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)  # دکمه‌ها ستون‌ستونی
+    buttons = ["Supreme", "Grand", "Exquisite", "Deluxe", "قیمت نهایی"]
+    for btn in buttons:
+        markup.add(types.KeyboardButton(btn))
+    bot.send_message(chat_id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
+
 def calculate_price(message):
-    if check_back(message): return
-    skin_type = message.text
-    if skin_type not in ["Supreme", "Grand", "Exquisite", "Deluxe"]:
-        bot.send_message(message.chat.id, "❌ نوع اسکین معتبر نیست. لطفاً مجدداً تلاش کنید.", reply_markup=types.ReplyKeyboardRemove())
-        send_menu(message.chat.id)
+    if check_back(message):
         return
 
-    user_data[message.chat.id] = {'skin_type': skin_type}
+    text = message.text.strip()
 
-    explanations = {
-        "Supreme": "✅ این دسته شامل اسکین‌های لجند می‌باشد.\n\nچندتا اسکین از این دسته داری؟",
-        "Grand": "✅ این دسته شامل اسکین‌های کوف، جوجوتسو، سوپر هیرو، استاروارز، ناروتو، ابیس و... می‌باشد.(از اسکین های پرایم فقط راجر رو اینجا وارد کنید و بقیه رو در قسمت Exquisite وارد کنید)\n\n❌ توجه داشته باشید اسکین‌های رایگان این دسته مثل کارینا، تاموز، فلورین، راجر و... رو حساب نکنید.\n\nچندتا اسکین از این دسته داری؟",
-        "Exquisite": "✅ این دسته شامل اسکین‌های کالکتور، لاکی باکس و کلادز می‌باشد(اسکین های پرایم در این قسمت وارد کنید).\n\n❌ توجه داشته باشید اسکین‌های رایگان این دسته مثل ناتالیا و... رو حساب نکنید.\n\nچندتا اسکین از این دسته داری؟",
-        "Deluxe": "✅ این دسته شامل اسکین‌های زودیاک، لایتبورن، اپیک شاپ و... می‌باشد.\n\nچندتا اسکین از این دسته داری؟"
-    }
+    if text == "قیمت نهایی":
+        if message.chat.id not in user_data or 'skin_type' not in user_data[message.chat.id] or 'skin_count' not in user_data[message.chat.id]:
+            bot.send_message(message.chat.id, "❌ اطلاعات کافی برای محاسبه قیمت وجود ندارد. لطفاً ابتدا نوع اسکین و تعداد را انتخاب کنید.")
+            send_skin_selection_menu(message.chat.id)
+            return
+        
+        skin_type = user_data[message.chat.id]['skin_type']
+        count = user_data[message.chat.id]['skin_count']
 
-    bot.send_message(message.chat.id, explanations[skin_type], reply_markup=types.ReplyKeyboardRemove())
-    bot.register_next_step_handler(message, get_skin_count)
+        fixed_prices = {
+            "Supreme": 1200000,
+            "Grand": 500000,
+            "Exquisite": 300000
+        }
 
-def get_skin_count(message):
-    if check_back(message): return
-    try:
-        count = int(message.text)
-        if count < 0:
-            raise ValueError()
-    except ValueError:
-        bot.send_message(message.chat.id, "❌ لطفاً فقط عدد وارد کنید. چندتا اسکین داری؟")
+        if skin_type in fixed_prices:
+            total_price = fixed_prices[skin_type] * count
+        else:  # Deluxe
+            if count < 20:
+                total_price = 25000 * count
+            elif 20 <= count <= 39:
+                total_price = 500000
+            else:
+                total_price = 700000
+
+        final_message = (
+            f"💰 قیمت کل اسکین‌های {skin_type} شما:\n\n"
+            f"تعداد اسکین‌ها: {count}\n"
+            f"💵 مبلغ کل: {total_price:,} تومان\n\n"
+            "💡 قیمت بالا ارزش اکانت شماست\n"
+            "برای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید."
+        )
+        bot.send_message(message.chat.id, final_message, reply_markup=types.ReplyKeyboardRemove())
+        send_skin_selection_menu(message.chat.id)
+        return
+
+    valid_skin_types = ["Supreme", "Grand", "Exquisite", "Deluxe"]
+    if text in valid_skin_types:
+        user_data[message.chat.id] = {'skin_type': text}
+        explanations = {
+            "Supreme": "✅ این دسته شامل اسکین‌های لجند می‌باشد.\n\nچندتا اسکین از این دسته داری؟",
+            "Grand": "✅ این دسته شامل اسکین‌های کوف، جوجوتسو، سوپر هیرو، استاروارز، ناروتو، ابیس و... می‌باشد.\n(از اسکین‌های پرایم فقط راجر رو اینجا وارد کنید و بقیه رو در قسمت Exquisite وارد کنید)\n\n❌ توجه داشته باشید اسکین‌های رایگان این دسته مثل کارینا، تاموز، فلورین، راجر و... رو حساب نکنید.\n\nچندتا اسکین از این دسته داری؟",
+            "Exquisite": "✅ این دسته شامل اسکین‌های کالکتور، لاکی باکس و کلادز می‌باشد (اسکین‌های پرایم در این قسمت وارد کنید).\n\n❌ توجه داشته باشید اسکین‌های رایگان این دسته مثل ناتالیا و... رو حساب نکنید.\n\nچندتا اسکین از این دسته داری؟",
+            "Deluxe": "✅ این دسته شامل اسکین‌های زودیاک، لایتبورن، اپیک شاپ و... می‌باشد.\n\nچندتا اسکین از این دسته داری؟"
+        }
+        bot.send_message(message.chat.id, explanations[text], reply_markup=types.ReplyKeyboardRemove())
         bot.register_next_step_handler(message, get_skin_count)
         return
 
-    user_data[message.chat.id]['skin_count'] = count
+    bot.send_message(message.chat.id, "❌ لطفاً از دکمه‌ها استفاده کنید.", reply_markup=types.ReplyKeyboardRemove())
+    send_skin_selection_menu(message.chat.id)
+
+def get_skin_count(message):
+    try:
+        count = int(message.text.strip())
+        if count < 0:
+            raise ValueError()
+    except Exception:
+        bot.send_message(message.chat.id, "❌ لطفاً فقط عدد مثبت وارد کنید. چندتا اسکین داری؟")
+        bot.register_next_step_handler(message, get_skin_count)
+        return
+
     skin_type = user_data[message.chat.id]['skin_type']
+    user_data[message.chat.id]['skin_count'] = count
 
-    # قیمت‌ها برای هر نوع اسکین به جز Deluxe
-    fixed_prices = {
-        "Supreme": 1200000,
-        "Grand": 500000,
-        "Exquisite": 300000
-    }
-
-    if skin_type in fixed_prices:
-        total_price = fixed_prices[skin_type] * count
-    else:  # Deluxe
-        if count < 20:
-            total_price = 25000 * count
-        elif 20 <= count <= 39:
-            total_price = 500000
-        else:
-            total_price = 700000
-
-    # متن نمایش قیمت کل
-    final_message = f"💰 قیمت کل اسکین‌های {skin_type} شما:\n\n" \
-                    f"تعداد اسکین‌ها: {count}\n" \
-                    f"💵 مبلغ کل: {total_price:,} تومان\n\n" \
-                    "💡 قیمت بالا ارزش اکانت شماست\n" \
-                    "برای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید."
-
-    bot.send_message(message.chat.id, final_message)
-    send_menu(message.chat.id)
+    bot.send_message(
+        message.chat.id,
+        "✅ اطلاعات ثبت شد.\n\nلطفاً نوع اسکین‌های خود را انتخاب کنید یا دکمه قیمت نهایی را بزنید.",
+        reply_markup=types.ReplyKeyboardRemove()
+    )
+    send_skin_selection_menu(message.chat.id)
+   
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
