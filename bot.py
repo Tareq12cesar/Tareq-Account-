@@ -242,8 +242,9 @@ def show_final_price(message):
     elif deluxe_count > 40:
         total_price += 700000
 
-    bot.send_message(user_id, f"✅ ارزش تقریبی اسکین‌های شما: {total_price:,} تومان\n\n💎 قیمت بالا ارزش اکانت شماست.\nبرای ثبت آگهی
-
+    bot.send_message(message.chat.id, f"✅ ارزش تقریبی اسکین‌های {skin_type} شما: {price:,} تومان\n\n💎 قیمت بالا ارزش اکانت شماست.\nبرای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید.", reply_markup=types.ReplyKeyboardRemove())
+    send_menu(message.chat.id)
+    
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
 
