@@ -41,7 +41,10 @@ def handle_buttons(message):
     elif message.text == "اکانت درخواستی":
         bot.send_message(message.chat.id, "✅ لطفاً مشخصات اکانت درخواستی خود را بنویسید. (مثال: کالکشن، تعداد اسکین‌ها و بودجه تقریبی)")
     elif message.text == "مشاهده آگهی‌ها":
-        bot.send_message(message.chat.id, f"✅ برای مشاهده آگهی‌های ثبت‌شده، به کانال زیر مراجعه کنید:\n{CHANNEL_LINK}")
+        markup = types.InlineKeyboardMarkup()
+        channel_button = types.InlineKeyboardButton("🔗 رفتن به کانال آگهی‌ها", url=CHANNEL_LINK)
+        markup.add(channel_button)
+        bot.send_message(message.chat.id, "✅ برای مشاهده آگهی‌های ثبت‌شده، روی دکمه زیر کلیک کنید:", reply_markup=markup)
     elif message.text == "قیمت یاب اکانت":
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
         markup.add("Supreme", "Grand", "Exquisite", "Deluxe")
