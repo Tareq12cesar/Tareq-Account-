@@ -5,7 +5,7 @@ from flask import Flask, request
 import threading
 
 # ======= تنظیمات اولیه =======
-BOT_TOKEN = 'AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
+BOT_TOKEN = '7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
 ADMIN_ID = 6697070308
 CHANNEL_USERNAME = '@filmskina'
 CHANNEL_LINK = 'https://t.me/filmskina'
