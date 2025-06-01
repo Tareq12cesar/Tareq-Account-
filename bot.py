@@ -144,7 +144,111 @@ def handle_admin_text(message):
         if not data:
             bot.send_message(ADMIN_ID, "❌ اطلاعات آگهی یافت نشد.")
             return
+# --- متغیرهای ذخیره درخواست‌های در انتظار تأیید ادمین ---
+        pending_requests = {}  # key: user_id, value: {'text': str}
+        pending_request_codes = {}
+        pending_request_rejections = {}
 
+# ======= شروع درخواست کاربر =======
+        @bot.message_handler(func=lambda message: message.text == "اکانت درخواستی")
+def start_request_process(message):
+        bot.send_message(message.chat.id, "لطفاً مشخصات اکانت درخواستی خود را وارد کنید:")
+        bot.register_next_step_handler(message, confirm_request_text)
+
+# ======= نمایش متن درخواست و پرسیدن تایید ارسال به ادمین =======
+def confirm_request_text(message):
+       text = message.text
+       pending_requests[message.from_user.id] = {'text': text}
+       markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+       markup.add("تایید ارسال به ادمین", "بازگشت")
+       bot.send_message(message.chat.id, f"درخواست شما:\n\n{text}\n\nلطفاً تأیید کنید که این درخواست برای ادمین ارسال شود.", reply_markup=markup)
+       bot.register_next_step_handler(message, process_request_confirmation)
+
+def process_request_confirmation(message):
+    if message.text == "بازگشت":
+        send_menu(message.chat.id)
+        return
+    elif message.text == "تایید ارسال به ادمین":
+        user_id = message.from_user.id
+        data = pending_requests.get(user_id)
+        if not data:
+            bot.send_message(message.chat.id, "❌ خطا: درخواستی یافت نشد.")
+            send_menu(message.chat.id)
+            return
+        # ارسال پیام به ادمین با دکمه های تأیید/رد
+        markup = types.InlineKeyboardMarkup()
+        approve_btn = types.InlineKeyboardButton("✅ تأیید", callback_data=f"request_approve_{user_id}")
+        reject_btn = types.InlineKeyboardButton("❌ رد", callback_data=f"request_reject_{user_id}")
+        markup.add(approve_btn, reject_btn)
+        bot.send_message(ADMIN_ID, f"📩 درخواست جدید:\n\n{data['text']}\n\nاز کاربر: @{message.from_user.username or 'نامشخص'}", reply_markup=markup)
+        bot.send_message(user_id, "درخواست شما برای بررسی به ادمین ارسال شد.\nمنتظر پاسخ باشید.", reply_markup=types.ReplyKeyboardRemove())
+    else:
+        bot.send_message(message.chat.id, "❌ گزینه نامعتبر است. لطفاً دوباره تلاش کنید.")
+        bot.register_next_step_handler(message, process_request_confirmation)
+
+# ======= هندل دکمه‌های ادمین برای درخواست‌ها =======
+        @bot.callback_query_handler(func=lambda call: call.data.startswith('request_approve_') or call.data.startswith('request_reject_'))
+def handle_admin_request_response(call):
+        parts = call.data.split('_')
+        action = parts[1]  # approve یا reject
+        user_id = int(parts[2])
+
+        data = pending_requests.get(user_id)
+    if not data:
+        bot.answer_callback_query(call.id, "❌ اطلاعات درخواست یافت نشد.")
+        return
+
+    if action == 'approve':
+        bot.send_message(ADMIN_ID, "✅ لطفاً یک کد تأیید برای این درخواست وارد کنید:")
+        pending_request_codes[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+
+    elif action == 'reject':
+        bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
+        pending_request_rejections[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+
+# ======= دریافت کد تأیید یا دلیل رد توسط ادمین =======
+        @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
+def handle_admin_request_text(message):
+    # کد تأیید درخواست
+    if ADMIN_ID in pending_request_codes:
+        code = message.text.strip()
+        pending = pending_request_codes.pop(ADMIN_ID)
+        user_id = pending['user_id']
+
+        data = pending_requests.pop(user_id, None)
+        if not data:
+            bot.send_message(ADMIN_ID, "❌ اطلاعات درخواست یافت نشد.")
+            return
+
+        # ارسال پیام تایید به کاربر
+        bot.send_message(user_id,
+                         f"✅ درخواست شما تایید شد.\nکد تایید: {code}\nلطفا این کد را به ادمین ارسال کنید.",
+                         reply_markup=types.ReplyKeyboardRemove())
+
+        # ارسال درخواست و کد به کانال
+        caption = f"📩 درخواست تأیید شده:\n\n{data['text']}\n\n🆔 کد تأیید: {code}"
+        bot.send_message(CHANNEL_USERNAME, caption)
+
+        bot.send_message(ADMIN_ID, "✅ درخواست تایید و به کانال ارسال شد.")
+
+    # دلیل رد درخواست
+    elif ADMIN_ID in pending_request_rejections:
+        reason = message.text.strip()
+        pending = pending_request_rejections.pop(ADMIN_ID)
+        user_id = pending['user_id']
+
+        data = pending_requests.pop(user_id, None)
+        if not data:
+            bot.send_message(ADMIN_ID, "❌ اطلاعات درخواست یافت نشد.")
+            return
+
+        bot.send_message(user_id,
+                         f"❌ متأسفانه درخواست شما رد شد.\nدلیل: {reason}",
+                         reply_markup=types.ReplyKeyboardRemove())
+
+        bot.send_message(ADMIN_ID, "✅ پیام رد درخواست به کاربر ارسال شد.")
         caption = f"📢 آگهی تأیید شده:\n\n" \
                   f"🧩 کالکشن: {data['collection']}\n" \
                   f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
