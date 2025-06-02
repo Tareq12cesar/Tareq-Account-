@@ -171,9 +171,6 @@ from telebot import types
 user_data = {}
 
 def send_skin_selection_menu(chat_id):
-    # پاک کردن کیبورد قبلی (اختیاری، برای اطمینان)
-        bot.send_message(chat_id, "یک لحظه...", reply_markup=types.ReplyKeyboardRemove())
-
 # ایجاد کیبورد جدید ستونی
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=1)
         markup.add("Supreme")
