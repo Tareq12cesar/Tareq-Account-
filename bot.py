@@ -451,7 +451,6 @@ caption = f"📌 درخواست تایید شده:\n\n" \
           f"🎯 اسکین‌های مورد نظر: {data['skins']}\n" \
           f"💵 حداکثر قیمت: {data['price']}\n" \
           f"🆔 کد تایید: {code}"
-   try:
     bot.send_message(CHANNEL_USERNAME, caption)
 except Exception as e:
     bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:\n{e}")
