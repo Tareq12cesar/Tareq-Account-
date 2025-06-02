@@ -448,7 +448,7 @@ def handle_request_approval_input(message):
         parse_mode="Markdown"
     )
 
-    # ساخت متن نهایی
+    # ساخت متن برای ارسال به کانال
     caption = (
         f"📌 درخواست خرید تایید شده:\n\n"
         f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"
@@ -456,7 +456,7 @@ def handle_request_approval_input(message):
         f"🆔 کد تایید: {code}"
     )
 
-    # ساخت دکمه تماس با ادمین
+    # دکمه ارتباط با ادمین
     contact_markup = types.InlineKeyboardMarkup()
     contact_btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
     contact_markup.add(contact_btn)
@@ -464,9 +464,10 @@ def handle_request_approval_input(message):
     # ارسال به کانال با هندل خطا
     try:
         bot.send_message(CHANNEL_USERNAME, caption, reply_markup=contact_markup)
-        bot.send_message(ADMIN_ID, "✅ پیام درخواستی با موفقیت به کانال ارسال شد.")
+        bot.send_message(ADMIN_ID, "✅ پیام با موفقیت به کانال ارسال شد.")
     except Exception as e:
         bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:\n{e}")
+
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
 
