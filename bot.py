@@ -259,6 +259,7 @@ def get_skin_count(message, skin_type):
     send_skin_selection_menu(message.chat.id)
 # ======= سیستم اکانت درخواستی ====== 
 
+
 @bot.message_handler(func=lambda message: message.text and "اکانت درخواستی" in message.text)
 def start_buy_request(message):
     user_data[message.chat.id] = {'username': message.from_user.username}
@@ -291,36 +292,17 @@ def confirm_request(message):
     bot.send_message(message.chat.id, caption, reply_markup=markup)
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('confirm_send_') or call.data == "cancel_request")
+@bot.callback_query_handler(func=lambda call: call.data.startswith("confirm_send_") or call.data == "cancel_request")
 def handle_request_confirmation(call):
     if call.data == "cancel_request":
-        bot.answer_callback_query(call.id, "❌ درخواست لغو شد.")
         bot.edit_message_text("❌ درخواست لغو شد.", call.message.chat.id, call.message.message_id)
         user_data.pop(call.message.chat.id, None)
         return
 
     user_id = int(call.data.split('_')[2])
     send_request_to_admin(user_id)
-    bot.answer_callback_query(call.id, "✅ درخواست ارسال شد.")
     bot.edit_message_text("✅ درخواست شما برای بررسی به ادمین ارسال شد.", call.message.chat.id, call.message.message_id)
 
-    elif action == 'reject_buy':
-        bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
-        pending_rejections[ADMIN_ID] = {
-            'user_id': user_id,
-            'message_id': call.message.message_id,
-            'type': 'buy'
-        }
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-
-    elif action == 'reject_buy':
-        bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
-        pending_rejections[ADMIN_ID] = {
-            'user_id': user_id,
-            'message_id': call.message.message_id,
-            'type': 'buy'
-        }
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
 def send_request_to_admin(user_id):
     data = user_data[user_id]
