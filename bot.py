@@ -441,14 +441,14 @@ def handle_request_approval_input(message):
         bot.send_message(ADMIN_ID, "❌ اطلاعات درخواست یافت نشد.")
         return
 
-    # پیام به کاربر
+    # ارسال پیام به کاربر
     bot.send_message(
         user_id,
         f"✅ درخواست شما تایید شد.\nکد تایید: `{code}`\nلطفاً این کد را به ادمین ارسال کنید.",
         parse_mode="Markdown"
     )
 
-    # ساخت کپشن
+    # ساخت متن نهایی
     caption = (
         f"📌 درخواست خرید تایید شده:\n\n"
         f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"
@@ -456,7 +456,7 @@ def handle_request_approval_input(message):
         f"🆔 کد تایید: {code}"
     )
 
-    # دکمه تماس با ادمین
+    # ساخت دکمه تماس با ادمین
     contact_markup = types.InlineKeyboardMarkup()
     contact_btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
     contact_markup.add(contact_btn)
