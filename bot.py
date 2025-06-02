@@ -301,7 +301,12 @@ def get_requested_price(message):
     if check_back(message): return
     request_data[message.chat.id]['price'] = message.text.strip()
 
-    summary = f"📄 خلاصه درخواست شما:\n\n"               f"🎯 اسکین‌های مورد نظر: {request_data[message.chat.id]['skins']}\n"               f"💵 حداکثر قیمت: {request_data[message.chat.id]['price']}\n\n"               f"✅ آیا تایید می‌کنید تا درخواست به ادمین ارسال شود؟"
+    summary = f"📄 خلاصه درخواست شما:
+
+"               f"🎯 اسکین‌های مورد نظر: {request_data[message.chat.id]['skins']}
+"               f"💵 حداکثر قیمت: {request_data[message.chat.id]['price']}
+
+"               f"✅ آیا تایید می‌کنید تا درخواست به ادمین ارسال شود؟"
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     markup.add("بله، ارسال شود", "لغو")
     bot.send_message(message.chat.id, summary, reply_markup=markup)
@@ -320,7 +325,12 @@ def confirm_request_submission(message):
     data = request_data[message.chat.id]
     user_id = message.chat.id
     username = message.from_user.username or "نامشخص"
-    caption = f"📥 درخواست خرید اکانت:\n\n"               f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"               f"💵 حداکثر قیمت: {data['price']}\n"               f"👤 ارسال‌کننده: @{username}"
+    caption = f"📥 درخواست خرید اکانت:
+
+"               f"🎯 اسکین‌های مورد نظر: {data['skins']}
+"               f"💵 حداکثر قیمت: {data['price']}
+"               f"👤 ارسال‌کننده: @{username}"
+
     markup = types.InlineKeyboardMarkup()
     approve_btn = types.InlineKeyboardButton("✅ تایید", callback_data=f"req_approve_{user_id}")
     reject_btn = types.InlineKeyboardButton("❌ رد", callback_data=f"req_reject_{user_id}")
@@ -360,16 +370,23 @@ def handle_request_approval_input(message):
 
     bot.send_message(
         user_id,
-        f"✅ درخواست شما تایید شد.\nکد تایید: `{code}`\nلطفاً این کد را به ادمین ارسال کنید.",
+        f"✅ درخواست شما تایید شد.
+کد تایید: `{code}`
+لطفاً این کد را به ادمین ارسال کنید.",
         parse_mode="Markdown"
     )
 
     caption = (
-        f"📌 درخواست خرید تایید شده:\n\n"
-        f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"
-        f"💵 حداکثر قیمت: {data['price']}\n"
+        f"📌 درخواست خرید تایید شده:
+
+"
+        f"🎯 اسکین‌های مورد نظر: {data['skins']}
+"
+        f"💵 حداکثر قیمت: {data['price']}
+"
         f"🆔 کد تایید: {code}"
     )
+
     contact_markup = types.InlineKeyboardMarkup()
     contact_btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
     contact_markup.add(contact_btn)
@@ -377,7 +394,9 @@ def handle_request_approval_input(message):
     try:
         bot.send_message(CHANNEL_USERNAME, caption, reply_markup=contact_markup)
     except Exception as e:
-        bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:\n{e}")
+        bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:
+{e}")
+
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
