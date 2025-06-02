@@ -265,7 +265,6 @@ def start_buy_request(message):
     bot.send_message(message.chat.id, "🔍 اسکین‌هایی که می‌خوای تو اکانت باشه رو تایپ کن:")
     bot.register_next_step_handler(message, get_requested_skins)
 
-
 def get_requested_skins(message):
     if check_back(message): return
     user_data[message.chat.id]['requested_skins'] = message.text
