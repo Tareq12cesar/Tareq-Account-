@@ -292,8 +292,7 @@ def get_requested_budget(message):
     if check_back(message): return
     user_data[message.chat.id]['max_price'] = message.text
 
-    summary = f"📥 درخواست اکانت ثبت شد:
-
+    summary = f"📥 درخواست ثبت شد:\n\n🎯 اسکین‌های دلخواه: {user_data[message.chat.id]['requested_skins']}\n💰 حداکثر قیمت: {user_data[message.chat.id]['max_price']} تومان"
 "               f"🎯 اسکین‌های دلخواه: {user_data[message.chat.id]['requested_skins']}
 "               f"💰 حداکثر قیمت: {user_data[message.chat.id]['max_price']} تومان
 
