@@ -291,34 +291,17 @@ def confirm_request(message):
     bot.send_message(message.chat.id, caption, reply_markup=markup)
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('approve_buy_') or call.data.startswith('reject_buy_'))
-def handle_admin_action(call):
-    parts = call.data.split('_')
-    action = parts[0] + "_" + parts[1]  # approve_buy or reject_buy
-    user_id = int(parts[2])
-
-    data = user_data.get(user_id)
-    if not data:
-        bot.answer_callback_query(call.id, "❌ اطلاعات درخواست یافت نشد.")
+@bot.callback_query_handler(func=lambda call: call.data.startswith("confirm_send_") or call.data == "cancel_request")
+def handle_request_confirmation(call):
+    if call.data == "cancel_request":
+        bot.edit_message_text("❌ درخواست لغو شد.", call.message.chat.id, call.message.message_id)
+        user_data.pop(call.message.chat.id, None)
         return
 
-    if action == 'approve_buy':
-        bot.send_message(ADMIN_ID, "✅ لطفاً یک کد تأیید برای این درخواست وارد کنید:")
-        pending_codes[ADMIN_ID] = {
-            'user_id': user_id,
-            'message_id': call.message.message_id,
-            'type': 'buy'
-        }
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+    user_id = int(call.data.split('_')[2])
+    send_request_to_admin(user_id)
+    bot.edit_message_text("✅ درخواست شما برای بررسی به ادمین ارسال شد.", call.message.chat.id, call.message.message_id)
 
-    elif action == 'reject_buy':
-        bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
-        pending_rejections[ADMIN_ID] = {
-            'user_id': user_id,
-            'message_id': call.message.message_id,
-            'type': 'buy'
-        }
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
 def send_request_to_admin(user_id):
     data = user_data[user_id]
