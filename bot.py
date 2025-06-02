@@ -39,6 +39,11 @@ def menu_command(message):
     send_menu(message.chat.id)
 
 # ======= هندل کردن دکمه‌ها =======
+
+@bot.message_handler(func=lambda message: message.text not in ["ثبت آگهی", "اکانت درخواستی", "مشاهده آگهی‌ها", "قیمت یاب اکانت", "بازگشت"])
+def route_step_handlers(message):
+    pass  # اجازه می‌دهد register_next_step_handler عمل کند
+
 @bot.message_handler(func=lambda message: message.text in ["ثبت آگهی", "اکانت درخواستی", "مشاهده آگهی‌ها", "قیمت یاب اکانت", "بازگشت"])
 def handle_buttons(message):
     if message.text == "ثبت آگهی":
@@ -47,7 +52,7 @@ def handle_buttons(message):
         bot.register_next_step_handler(message, get_collection)
     elif message.text == "اکانت درخواستی":
         user_data[message.chat.id] = {}
-        bot.send_message(message.chat.id, "اسکین‌هایی که می‌خوای رو تایپ کن:")
+        bot.send_message(message.chat.id, "لطفاً اسکین‌هایی که می‌خوای داخل اکانت باشه رو تایپ کن:")
         bot.register_next_step_handler(message, get_requested_skins)
     elif message.text == "مشاهده آگهی‌ها":
         markup = types.InlineKeyboardMarkup()
@@ -287,7 +292,7 @@ pending_requests = {}
 def get_requested_skins(message):
     if check_back(message): return
     user_data[message.chat.id]['requested_skins'] = message.text
-    bot.send_message(message.chat.id, "حداکثر قیمتت رو بگو:")
+    bot.send_message(message.chat.id, "حداکثر قیمتی که می‌خوای هزینه کنی رو وارد کن:")
     bot.register_next_step_handler(message, get_requested_budget)
 
 def get_requested_budget(message):
