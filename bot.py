@@ -313,7 +313,7 @@ def confirm_request_submission(message):
     markup.add(approve_btn, reject_btn)
 
     bot.send_message(ADMIN_ID, caption, reply_markup=markup)
-    bot.send_message(user_id, "📨 درخواست شما برای بررسی به ادمین ارسال شد.", reply_markup=types.ReplyKeyboardRemove()
+    bot.send_message(user_id, "📨 درخواست شما برای بررسی به ادمین ارسال شد.", reply_markup=types.ReplyKeyboardRemove())
     send_menu(user_id))
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('req_approve_') or call.data.startswith('req_reject_'))
