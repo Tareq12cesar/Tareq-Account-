@@ -308,7 +308,12 @@ def handle_request_steps(message):
 def send_request_to_admin(user_id):
     data = user_data[user_id]
     caption = (
-        f"درخواست اکانت:
+        caption = (
+    f"درخواست اکانت:\n\n"
+    f"🧩 اسکین‌های دلخواه: {data['requested_skins']}\n"
+    f"💰 حداکثر قیمت: {data['max_price']} تومان\n"
+    f"👤 ارسال‌کننده: @{data.get('username') or 'نامشخص'}"
+    )
 
 "
         f"🧩 اسکین‌های دلخواه: {data['requested_skins']}
