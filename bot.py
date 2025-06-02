@@ -290,33 +290,58 @@ def confirm_request(message):
     markup.add(confirm_btn, cancel_btn)
 
     bot.send_message(message.chat.id, caption, reply_markup=markup)
+@bot.callback_query_handler(func=lambda call: call.data.startswith('approve_') or call.data.startswith('reject_'))
+def handle_admin_response(call):
+    parts = call.data.split('_')
+    action = parts[0]
+    user_id = int(parts[1])
 
-
-@bot.callback_query_handler(func=lambda call: call.data.startswith("confirm_send_") or call.data == "cancel_request")
-def handle_request_confirmation(call):
-    if call.data == "cancel_request":
-        bot.edit_message_text("❌ درخواست لغو شد.", call.message.chat.id, call.message.message_id)
-        user_data.pop(call.message.chat.id, None)
+    data = user_data.get(user_id)
+    if not data:
+        bot.answer_callback_query(call.id, "اطلاعات آگهی یافت نشد.")
         return
 
-    user_id = int(call.data.split('_')[2])
-    send_request_to_admin(user_id)
-    bot.edit_message_text("✅ درخواست شما برای بررسی به ادمین ارسال شد.", call.message.chat.id, call.message.message_id)
+    if action == 'approve':
+        bot.send_message(ADMIN_ID, "✅ لطفاً یک کد دلخواه برای این آگهی وارد کنید:")
+        pending_codes[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
+    elif action == 'reject':
+        bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد آگهی را بنویسید:")
+        pending_rejections[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
-def send_request_to_admin(user_id):
-    data = user_data[user_id]
-    caption = f"🛒 درخواست خرید جدید:\n\n" \
+@bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
+def handle_admin_text(message):
+    if ADMIN_ID in pending_codes:
+        code = message.text.strip()
+        pending = pending_codes.pop(ADMIN_ID)
+        user_id = pending['user_id']
+
+        data = user_data.get(user_id)
+        if not data:
+            bot.send_message(ADMIN_ID, "❌ اطلاعات آگهی یافت نشد.")
+            return
+
+         caption = f"🛒 درخواست خرید جدید:\n\n" \
               f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
               f"💰 بودجه: {data['max_budget']} تومان\n\n" \
               f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
+        
+        contact_markup = types.InlineKeyboardMarkup()
+        contact_button = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+        contact_markup.add(contact_button)
 
-    markup = types.InlineKeyboardMarkup()
-approve_button = types.InlineKeyboardButton("✅ تأیید درخواست (وارد کردن کد)", callback_data=f"approve_buy_{user_id}")
-reject_button = types.InlineKeyboardButton("❌ رد درخواست (نوشتن دلیل)", callback_data=f"reject_buy_{user_id}")
-markup.add(approve_button, reject_button)
+        bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=contact_markup)
+        bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی شما: {code}\n\nلطفاً این کد را به ادمین ارسال کنید.")
 
-bot.send_message(ADMIN_ID, caption, reply_markup=markup)
+    elif ADMIN_ID in pending_rejections:
+        reason = message.text.strip()
+        pending = pending_rejections.pop(ADMIN_ID)
+        user_id = pending['user_id']
+
+        bot.send_message(user_id, f"❌ متأسفانه آگهی شما توسط ادمین رد شد.\nدلیل: {reason}")
+
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
 
