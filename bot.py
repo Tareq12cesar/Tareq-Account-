@@ -306,20 +306,13 @@ def handle_request_steps(message):
         send_request_to_admin(message.chat.id)
 
 def send_request_to_admin(user_id):
+def send_request_to_admin(user_id):
     data = user_data[user_id]
+    
     caption = (
-        caption = (
-    f"درخواست اکانت:\n\n"
-    f"🧩 اسکین‌های دلخواه: {data['requested_skins']}\n"
-    f"💰 حداکثر قیمت: {data['max_price']} تومان\n"
-    f"👤 ارسال‌کننده: @{data.get('username') or 'نامشخص'}"
-    )
-
-"
-        f"🧩 اسکین‌های دلخواه: {data['requested_skins']}
-"
-        f"💰 حداکثر قیمت: {data['max_price']} تومان
-"
+        f"درخواست اکانت:\n\n"
+        f"🧩 اسکین‌های دلخواه: {data['requested_skins']}\n"
+        f"💰 حداکثر قیمت: {data['max_price']} تومان\n"
         f"👤 ارسال‌کننده: @{data.get('username') or 'نامشخص'}"
     )
 
@@ -328,6 +321,7 @@ def send_request_to_admin(user_id):
         types.InlineKeyboardButton("✅ تأیید درخواست", callback_data=f"reqapprove_{user_id}"),
         types.InlineKeyboardButton("❌ رد درخواست", callback_data=f"reqreject_{user_id}")
     )
+
     bot.send_message(ADMIN_ID, caption, reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("reqapprove_") or call.data.startswith("reqreject_"))
