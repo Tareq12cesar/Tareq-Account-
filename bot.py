@@ -173,14 +173,9 @@ user_data = {}
 
 def send_skin_selection_menu(chat_id):
 # ایجاد کیبورد جدید ستونی
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=1)
-        markup.add("Supreme")
-        markup.add("Grand")
-        markup.add("Exquisite")
-        markup.add("Deluxe")
-        markup.add("قیمت نهایی")
-        markup.add("بازگشت")
-        bot.send_message(chat_id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=1) 
+    markup.add("Supreme") markup.add("Grand") markup.add("Exquisite") markup.add("Deluxe") markup.add("قیمت نهایی") 
+    markup.add("بازگشت") bot.send_message(chat_id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text in ["Supreme", "Grand", "Exquisite", "Deluxe", "قیمت نهایی", "بازگشت"])
 def calculate_price(message):
