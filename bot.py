@@ -431,25 +431,24 @@ def handle_request_response(call):
 
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
-@bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
-def handle_admin_input(message):
-    if ADMIN_ID in pending_request_approvals:
-        user_id = pending_request_approvals.pop(ADMIN_ID)
-        code = message.text.strip()
+@bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID and ADMIN_ID in pending_request_approvals)
+def handle_request_approval_input(message):
+    user_id = pending_request_approvals.pop(ADMIN_ID)
+    code = message.text.strip()
 
-        data = request_data.get(user_id)
+    data = request_data.get(user_id)
     if not data:
-        bot.send_message(ADMIN_ID, "📥 DEBUG: توی تابع handle_admin_input اومدم.")
+        bot.send_message(ADMIN_ID, "❌ اطلاعات درخواست یافت نشد.")
         return
 
-    # ارسال به کاربر
+    # ارسال پیام به کاربر
     bot.send_message(
         user_id,
         f"✅ درخواست شما تایید شد.\nکد تایید: `{code}`\nلطفاً این کد را به ادمین ارسال کنید.",
         parse_mode="Markdown"
     )
 
-    # ساخت کپشن برای ارسال به کانال
+    # ساخت پیام برای ارسال به کانال
     caption = (
         f"📌 درخواست خرید تایید شده:\n\n"
         f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"
@@ -457,7 +456,7 @@ def handle_admin_input(message):
         f"🆔 کد تایید: {code}"
     )
 
-    # ساخت دکمه ارتباط با ادمین
+    # دکمه تماس با ادمین
     contact_markup = types.InlineKeyboardMarkup()
     contact_btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
     contact_markup.add(contact_btn)
