@@ -53,10 +53,14 @@ def handle_buttons(message):
         markup.add(channel_button)
         bot.send_message(message.chat.id, "✅ برای مشاهده آگهی‌های ثبت‌شده، روی دکمه زیر کلیک کنید:", reply_markup=markup)
     elif message.text == "قیمت یاب اکانت":
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-        markup.add("Supreme", "Grand", "Exquisite", "Deluxe", "بازگشت")
-        bot.send_message(message.chat.id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
-        bot.register_next_step_handler(message, calculate_price)
+         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=1)
+         markup.add("Supreme")
+         markup.add("Grand")
+         markup.add("Exquisite")
+         markup.add("Deluxe")
+         markup.add("بازگشت")
+         bot.send_message(message.chat.id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
+         bot.register_next_step_handler(message, calculate_price)
     elif message.text == "بازگشت":
         send_menu(message.chat.id)
 
