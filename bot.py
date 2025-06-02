@@ -327,8 +327,11 @@ def handle_request_decision(message):
     if approved:
         code = message.text.strip()
         data = user_data.get(user_id, {})
-        caption = f"📢 درخواست تأیید شده:
+        caption = f"""درخواست تایید شده:
 
+اسکین‌های دلخواه: {user_data[chat_id]['requested_skins']}
+حداکثر قیمت: {user_data[chat_id]['max_price']} تومان
+کد تایید: {code}"""
 " \
                   f"🎯 اسکین‌های دلخواه: {data.get('requested_skins', '---')}
 " \
