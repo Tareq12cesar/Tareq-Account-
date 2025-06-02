@@ -214,17 +214,7 @@ def calculate_price(message):
                     price = 700000
             total_price += price
             summary_lines.append(f"💰 {skin_type}: تعداد = {price:,} تومان")
-        # ساخت لیست اسکین‌ها با تعداد
-selected_skins = "\n".join([f"{skin}: {count}" for skin, count in user_data[message.chat.id].items()])
-
-# ساخت پیام نهایی
-final_message = (
-    "✅ اسکین‌هایی که انتخاب کردی:\n" +
-    selected_skins +
-    f"\n\n💰 قیمت کل: {total_price:,} تومان\n\n"
-    "💡 قیمت بالا ارزش اکانت شماست\n"
-    "برای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید."
-)
+            final_message = ("✅ اسکین‌هایی که انتخاب کردی:\n" + selected_skins +f"\n\n💰 قیمت کل: {total_price:,} تومان\n\n""💡 قیمت بالا ارزش اکانت شماست\n""برای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید.")
         bot.send_message(message.chat.id, final_message)
         user_data.pop(message.chat.id, None)
         send_menu(message.chat.id)
