@@ -258,11 +258,11 @@ def get_skin_count(message, skin_type):
     )
     send_skin_selection_menu(message.chat.id)
 # ======= سیستم اکانت درخواستی =======
-
-def start_buy_request(message):
-    user_data[message.chat.id] = {'username': message.from_user.username}
-    bot.send_message(message.chat.id, "🔍 اسکین‌هایی که می‌خوای تو اکانت باشه رو تایپ کن:")
-    bot.register_next_step_handler(message, get_requested_skins)
+def get_collection(message):
+    if check_back(message): return
+    user_data[message.chat.id]['collection'] = message.text
+    bot.send_message(message.chat.id, "لطفاً اسکین‌های مهم اکانت را وارد کنید:")
+    bot.register_next_step_handler(message, get_key_skins)
 
 def get_requested_skins(message):
     if check_back(message): return
