@@ -39,10 +39,9 @@ def menu_command(message):
     send_menu(message.chat.id)
 
 # ======= هندل کردن دکمه‌ها =======
-
 @bot.message_handler(func=lambda message: message.text not in ["ثبت آگهی", "اکانت درخواستی", "مشاهده آگهی‌ها", "قیمت یاب اکانت", "بازگشت"])
 def route_step_handlers(message):
-    pass  # اجازه می‌دهد register_next_step_handler عمل کند
+    pass
 
 @bot.message_handler(func=lambda message: message.text in ["ثبت آگهی", "اکانت درخواستی", "مشاهده آگهی‌ها", "قیمت یاب اکانت", "بازگشت"])
 def handle_buttons(message):
@@ -286,6 +285,8 @@ threading.Thread(target=run).start()
 bot.infinity_polling()
 
 
+
+
 # ======= بخش اکانت درخواستی =======
 pending_requests = {}
 
@@ -298,6 +299,7 @@ def get_requested_skins(message):
 def get_requested_budget(message):
     if check_back(message): return
     user_data[message.chat.id]['max_price'] = message.text
+
     bot.send_message(message.chat.id, "درخواستت ثبت شد و برای بررسی به ادمین ارسال شد.")
 
     caption = f"درخواست اکانت:\n\nاسکین‌های دلخواه: {user_data[message.chat.id]['requested_skins']}\nحداکثر قیمت: {user_data[message.chat.id]['max_price']} تومان\nدرخواست‌دهنده: @{message.from_user.username or 'نامشخص'}"
