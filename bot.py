@@ -360,9 +360,7 @@ def handle_request_approval_input(message):
 
     bot.send_message(
         user_id,
-        f"✅ درخواست شما تایید شد.
-کد تایید: `{code}`
-لطفاً این کد را به ادمین ارسال کنید.",
+        f"✅ درخواست شما تایید شد.\nکد تایید: `{code}`\nلطفاً این کد را به ادمین ارسال کنید.",
         parse_mode="Markdown"
     )
 
