@@ -414,6 +414,6 @@ def handle_reject_reason(message):
     reason = message.text.strip()
 
     bot.send_message(user_id, f"درخواست شما رد شد.\nدلیل: {reason}")
-    pending_rejections.pop(ADMIN_ID 
+    pending_rejections.pop(ADMIN_ID)
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None) 
 # داخل handler ادمین اصلی (handle_admin_text) نیازی به تغییر خاص نیست چون همون متغیرهای pending_codes و pending_rejections استفاده می‌شن
