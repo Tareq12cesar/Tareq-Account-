@@ -16,14 +16,15 @@ pending_rejections = {}
 
 # ======= دکمه منو =======
 def send_menu(chat_id):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    markup.add(
-        types.KeyboardButton("ثبت آگهی"),
-        types.KeyboardButton("اکانت درخواستی"),
-        types.KeyboardButton("مشاهده آگهی‌ها"),
-        types.KeyboardButton("قیمت یاب اکانت"),
-        types.KeyboardButton("بازگشت")
-    )
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=1)
+        markup.add("Supreme")
+        markup.add("Grand")
+        markup.add("Exquisite")
+        markup.add("Deluxe")
+        markup.add("قیمت نهایی")
+        markup.add("بازگشت")
+      bot.send_message(chat_id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
+
     bot.send_message(chat_id, "سلام! از منو زیر گزینه مورد نظر را انتخاب کنید:", reply_markup=markup)
 
 # ======= چک کردن بازگشت در هر مرحله =======
