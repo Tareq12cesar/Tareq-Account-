@@ -256,6 +256,7 @@ def get_skin_count(message, skin_type):
         message.chat.id,
         f"✅ تعداد اسکین‌های دسته {skin_type} ثبت شد.\n\nلطفاً دسته بعدی را انتخاب کنید یا «قیمت نهایی» را بزنید."
     )
+    send_skin_selection_menu(message.chat.id)
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
