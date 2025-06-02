@@ -434,10 +434,10 @@ def handle_request_response(call):
 
 @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
 def handle_admin_input(message):
-    
     if ADMIN_ID in pending_request_approvals:
-    user_id = pending_request_approvals.pop(ADMIN_ID)
-    code = message.text.strip()
+    user_id = 
+    pending_request_approvals.pop(ADMIN_ID)
+            code = message.text.strip()
 
     data = request_data.get(user_id)
     if not data:
