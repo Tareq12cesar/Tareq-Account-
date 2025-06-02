@@ -438,14 +438,20 @@ def handle_admin_input(message):
     if ADMIN_ID in pending_request_approvals:
     user_id = pending_request_approvals.pop(ADMIN_ID)
     code = message.text.strip()
-    data = request_data.get(user_id)
 
+    data = request_data.get(user_id)
     if not data:
-        bot.send_message(ADMIN_ID, "❌ درخواست پیدا نشد.")
+        bot.send_message(ADMIN_ID, "❌ اطلاعات درخواست یافت نشد.")
         return
 
-    bot.send_message(user_id, "✅ درخواست شما تایید شد.")
+    # ارسال به کاربر
+    bot.send_message(
+        user_id,
+        f"✅ درخواست شما تایید شد.\nکد تایید: `{code}`\nلطفاً این کد را به ادمین ارسال کنید.",
+        parse_mode="Markdown"
+    )
 
+    # ساخت کپشن برای کانال
     caption = (
         f"📌 درخواست تایید شده:\n\n"
         f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"
@@ -457,11 +463,6 @@ def handle_admin_input(message):
         bot.send_message(CHANNEL_USERNAME, caption)
     except Exception as e:
         bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:\n{e}")
-
-elif ADMIN_ID in pending_request_rejections:
-    user_id = pending_request_rejections.pop(ADMIN_ID)
-    reason = message.text.strip()
-    bot.send_message(user_id, f"❌ درخواست شما رد شد.\n📌 دلیل: {reason}")
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
