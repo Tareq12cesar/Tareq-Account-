@@ -47,7 +47,7 @@ def handle_buttons(message):
         bot.register_next_step_handler(message, get_collection)
     elif message.text == "اکانت درخواستی":
         user_data[message.chat.id] = {}
-        bot.send_message(message.chat.id, "لطفاً اسکین‌هایی که می‌خوای داخل اکانت باشه رو تایپ کن:")
+        bot.send_message(message.chat.id, "اسکین‌هایی که می‌خوای رو تایپ کن:")
         bot.register_next_step_handler(message, get_requested_skins)
     elif message.text == "مشاهده آگهی‌ها":
         markup = types.InlineKeyboardMarkup()
@@ -287,7 +287,7 @@ pending_requests = {}
 def get_requested_skins(message):
     if check_back(message): return
     user_data[message.chat.id]['requested_skins'] = message.text
-    bot.send_message(message.chat.id, "حداکثر قیمتی که می‌خوای هزینه کنی رو به تومان وارد کن:")
+    bot.send_message(message.chat.id, "حداکثر قیمتت رو بگو:")
     bot.register_next_step_handler(message, get_requested_budget)
 
 def get_requested_budget(message):
