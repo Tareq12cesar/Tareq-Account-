@@ -461,11 +461,12 @@ def handle_request_approval_input(message):
     contact_btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
     contact_markup.add(contact_btn)
 
-    # ارسال به کانال
-    try:
-        threading.Thread(target=bot.send_message, args=(CHANNEL_USERNAME, caption), kwargs={"reply_markup": contact_markup}).start()
-    except Exception as e:
-        bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:\n{e}")
+    # ارسال به کانال با اطمینان
+try:
+    bot.send_message(CHANNEL_USERNAME, caption, reply_markup=contact_markup)
+    bot.send_message(ADMIN_ID, "✅ پیام درخواستی با موفقیت به کانال ارسال شد.")
+except Exception as e:
+    bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:\n{str(e)}")
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
