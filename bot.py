@@ -101,9 +101,9 @@ def get_video(message):
 def send_to_admin(user_id):
     data = user_data[user_id]
     caption = f"📢 آگهی جدید برای بررسی:\n\n" \
-              f"🧩 کالکشن: {data['collection']}\n" \
-              f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
-              f"📝 توضیحات: {data['description']}\n" \
+              f"🧩 کالکشن: {data['collection']}\n"
+              f"🎮 اسکین‌های مهم: {data['key_skins']}\n"
+              f"📝 توضیحات: {data['description']}\n"
               f"💰 قیمت: {data['price']} تومان\n\n" \
               f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
 
