@@ -301,12 +301,7 @@ def get_requested_price(message):
     if check_back(message): return
     request_data[message.chat.id]['price'] = message.text.strip()
 
-    summary = (
-    f"📄 خلاصه درخواست شما:\n\n"
-    f"🎯 اسکین‌های مورد نظر: {request_data[message.chat.id]['skins']}\n"
-    f"💵 حداکثر قیمت: {request_data[message.chat.id]['price']}\n\n"
-    f"✅ آیا تایید می‌کنید تا درخواست به ادمین ارسال شود؟"
-    )
+    summary = f"📄 خلاصه درخواست شما:\n\n"               f"🎯 اسکین‌های مورد نظر: {request_data[message.chat.id]['skins']}\n"               f"💵 حداکثر قیمت: {request_data[message.chat.id]['price']}\n\n"               f"✅ آیا تایید می‌کنید تا درخواست به ادمین ارسال شود؟"
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     markup.add("بله، ارسال شود", "لغو")
     bot.send_message(message.chat.id, summary, reply_markup=markup)
