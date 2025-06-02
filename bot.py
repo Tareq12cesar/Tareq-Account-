@@ -301,28 +301,17 @@ def get_requested_price(message):
     if check_back(message): return
     request_data[message.chat.id]['price'] = message.text.strip()
 
-    summary = f"📄 خلاصه درخواست شما:\n\n" \
-          f"🎯 اسکین‌های مورد نظر: {request_data[message.chat.id]['skins']}\n" \
-          f"💵 حداکثر قیمت: {request_data[message.chat.id]['price']}\n\n" \
-          f"✅ آیا تایید می‌کنید تا درخواست به ادمین ارسال شود؟"
-"               f"🎯 اسکین‌های مورد نظر: {request_data[message.chat.id]['skins']}
-"               f"💵 حداکثر قیمت: {request_data[message.chat.id]['price']}
+    summary = (
+        f"📄 خلاصه درخواست شما:\n\n"
+        f"🎯 اسکین‌های مورد نظر: {request_data[message.chat.id]['skins']}\n"
+        f"💵 حداکثر قیمت: {request_data[message.chat.id]['price']}\n\n"
+        f"✅ آیا تایید می‌کنید تا درخواست به ادمین ارسال شود؟"
+    )
 
-"               f"✅ آیا تایید می‌کنید تا درخواست به ادمین ارسال شود؟"
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     markup.add("بله، ارسال شود", "لغو")
     bot.send_message(message.chat.id, summary, reply_markup=markup)
     bot.register_next_step_handler(message, confirm_request_submission)
-
-def confirm_request_submission(message):
-    if message.text == "لغو":
-        bot.send_message(message.chat.id, "❌ درخواست لغو شد.", reply_markup=types.ReplyKeyboardRemove())
-        send_menu(message.chat.id)
-        return
-    if message.text != "بله، ارسال شود":
-        bot.send_message(message.chat.id, "❗ لطفاً یکی از گزینه‌ها را انتخاب کنید.")
-        bot.register_next_step_handler(message, confirm_request_submission)
-        return
 
     data = request_data[message.chat.id]
     user_id = message.chat.id
@@ -379,14 +368,10 @@ def handle_request_approval_input(message):
     )
 
     caption = (
-        f"📌 درخواست خرید تایید شده:
-
-"
-        f"🎯 اسکین‌های مورد نظر: {data['skins']}
-"
-        f"💵 حداکثر قیمت: {data['price']}
-"
-        f"🆔 کد تایید: {code}"
+    f"📌 درخواست خرید تایید شده:\n\n"
+    f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"
+    f"💵 حداکثر قیمت: {data['price']}\n"
+    f"🆔 کد تایید: {code}"
     )
 
     contact_markup = types.InlineKeyboardMarkup()
