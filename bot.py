@@ -320,12 +320,7 @@ def confirm_request_submission(message):
     data = request_data[message.chat.id]
     user_id = message.chat.id
     username = message.from_user.username or "نامشخص"
-    caption = f"📥 درخواست خرید اکانت:
-
-"               f"🎯 اسکین‌های مورد نظر: {data['skins']}
-"               f"💵 حداکثر قیمت: {data['price']}
-"               f"👤 ارسال‌کننده: @{username}"
-
+    caption = f"📥 درخواست خرید اکانت:\n\n"               f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"               f"💵 حداکثر قیمت: {data['price']}\n"               f"👤 ارسال‌کننده: @{username}"
     markup = types.InlineKeyboardMarkup()
     approve_btn = types.InlineKeyboardButton("✅ تایید", callback_data=f"req_approve_{user_id}")
     reject_btn = types.InlineKeyboardButton("❌ رد", callback_data=f"req_reject_{user_id}")
