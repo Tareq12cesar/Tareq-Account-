@@ -445,11 +445,11 @@ def handle_admin_input(message):
     # ارسال به کاربر
     bot.send_message(
         user_id,
-        f"✅ درخواست شما تایید شد.\nکد تایید: `{code}`",
+        f"✅ درخواست شما تایید شد.\nکد تایید: `{code}`\nلطفاً این کد را به ادمین ارسال کنید.",
         parse_mode="Markdown"
     )
 
-    # ساخت کپشن و ارسال به کانال
+    # ساخت کپشن برای ارسال به کانال
     caption = (
         f"📌 درخواست خرید تایید شده:\n\n"
         f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"
@@ -457,15 +457,16 @@ def handle_admin_input(message):
         f"🆔 کد تایید: {code}"
     )
 
+    # ساخت دکمه ارتباط با ادمین
     contact_markup = types.InlineKeyboardMarkup()
-    contact_button = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
-    contact_markup.add(contact_button)
+    contact_btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+    contact_markup.add(contact_btn)
 
+    # ارسال به کانال
     try:
         bot.send_message(CHANNEL_USERNAME, caption, reply_markup=contact_markup)
     except Exception as e:
         bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:\n{e}")
-
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
