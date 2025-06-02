@@ -337,8 +337,11 @@ def handle_admin_response(message):
 
 
 
-
 # ======= سیستم اکانت درخواستی با الگویی مشابه ثبت آگهی =======
+
+pending_codes = {}
+pending_rejections = {}
+
 def get_requested_skins(message):
     if check_back(message): return
     user_data[message.chat.id]['requested_skins'] = message.text
@@ -353,11 +356,12 @@ def get_requested_price(message):
 
 def send_request_to_admin(user_id):
     data = user_data[user_id]
-    caption = f"درخواست اکانت:
-
-"               f"🧩 اسکین‌های دلخواه: {data['requested_skins']}
-"               f"💰 حداکثر قیمت: {data['max_price']} تومان
-"               f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
+    caption = (
+        f"درخواست اکانت:\n\n"
+        f"🧩 اسکین‌های دلخواه: {data['requested_skins']}\n"
+        f"💰 حداکثر قیمت: {data['max_price']} تومان\n"
+        f"👤 ارسال‌کننده: @{data.get('username') or 'نامشخص'}"
+    )
 
     markup = types.InlineKeyboardMarkup()
     approve_button = types.InlineKeyboardButton("✅ تأیید درخواست (کد دلخواه)", callback_data=f"reqapprove_{user_id}")
@@ -384,6 +388,33 @@ def handle_request_callback(call):
     elif action == 'reqreject':
         bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
         pending_rejections[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+
+@bot.message_handler(func=lambda m: m.chat.id == ADMIN_ID and ADMIN_ID in pending_codes)
+def handle_code_entry(message):
+    user_id = pending_codes[ADMIN_ID]['user_id']
+    code = message.text.strip()
+
+    text = f"درخواست شما تایید شد.\nکد تایید: {code}\nلطفا این کد را به ادمین ارسال کنید."
+    bot.send_message(user_id, text)
+
+    post = (
+        f"✅ درخواست تأیید شده:\n\n"
+        f"🧩 اسکین‌ها: {user_data[user_id]['requested_skins']}\n"
+        f"💰 قیمت: {user_data[user_id]['max_price']} تومان\n"
+        f"📎 کد تایید: {code}"
+    )
+    bot.send_message(CHANNEL_USERNAME, post)
+
+    pending_codes.pop(ADMIN_ID)
+
+@bot.message_handler(func=lambda m: m.chat.id == ADMIN_ID and ADMIN_ID in pending_rejections)
+def handle_reject_reason(message):
+    user_id = pending_rejections[ADMIN_ID]['user_id']
+    reason = message.text.strip()
+
+    bot.send_message(user_id, f"درخواست شما رد شد.\nدلیل: {reason}")
+    pending_rejections.pop(ADMIN_ID)
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
 # داخل handler ادمین اصلی (handle_admin_text) نیازی به تغییر خاص نیست چون همون متغیرهای pending_codes و pending_rejections استفاده می‌شن
