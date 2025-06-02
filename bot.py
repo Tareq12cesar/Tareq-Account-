@@ -377,9 +377,7 @@ def handle_request_approval_input(message):
     try:
         bot.send_message(CHANNEL_USERNAME, caption, reply_markup=contact_markup)
     except Exception as e:
-        bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:
-{e}")
-
+        bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:\n{e}")
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
