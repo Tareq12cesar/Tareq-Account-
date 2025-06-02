@@ -279,11 +279,12 @@ def confirm_request(message):
     user_data[message.chat.id]['max_budget'] = message.text
 
     data = user_data[message.chat.id]
-    caption = f"🛒 خلاصه درخواست خرید شما:\n\n" \
+
+    caption = f"🛒 درخواست خرید جدید:\n\n" \
               f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
               f"💰 بودجه: {data['max_budget']} تومان\n\n" \
-              f"آیا مایل به ارسال این درخواست برای بررسی ادمین هستید؟"
-
+              f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
+    
     markup = types.InlineKeyboardMarkup()
     confirm_btn = types.InlineKeyboardButton("✅ تایید و ارسال به ادمین", callback_data=f"confirm_send_{message.chat.id}")
     cancel_btn = types.InlineKeyboardButton("❌ لغو", callback_data="cancel_request")
