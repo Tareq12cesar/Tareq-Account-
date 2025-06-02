@@ -434,46 +434,38 @@ def handle_request_response(call):
 @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
 def handle_admin_input(message):
     if ADMIN_ID in pending_request_approvals:
-        user_id = pending_request_approvals.pop(ADMIN_ID)
-        code = message.text.strip()
+    user_id = pending_request_approvals.pop(ADMIN_ID)
+    code = message.text.strip()
 
-        data = request_data.get(user_id)
-        if not data:
-            bot.send_message(ADMIN_ID, "❌ اطلاعات درخواست یافت نشد.")
-            return
+    data = request_data.get(user_id)
+    if not data:
+        bot.send_message(ADMIN_ID, "❌ اطلاعات درخواست یافت نشد.")
+        return
 
-        # ارسال به کاربر
-        bot.send_message(user_id, f"✅ درخواست شما تایید شد.\nکد تایید: `{code}`\nلطفا این کد را به ادمین ارسال کنید.", parse_mode="Markdown")
+    # ارسال به کاربر
+    bot.send_message(
+        user_id,
+        f"✅ درخواست شما تایید شد.\nکد تایید: `{code}`",
+        parse_mode="Markdown"
+    )
 
-        # ارسال به کانال
-        caption = f"📌 درخواست تایید شده:\n\n"                   f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"                   f"💵 حداکثر قیمت: {data['price']}\n"                   f"🆔 کد تایید: {code}"
-        bot.send_message(CHANNEL_USERNAME, caption)
+    # ساخت کپشن و ارسال به کانال
+    caption = (
+        f"📌 درخواست خرید تایید شده:\n\n"
+        f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"
+        f"💵 حداکثر قیمت: {data['price']}\n"
+        f"🆔 کد تایید: {code}"
+    )
 
-    elif ADMIN_ID in pending_request_rejections:
-        user_id = pending_request_rejections.pop(ADMIN_ID)
-        reason = message.text.strip()
-        bot.send_message(user_id, f"❌ درخواست شما رد شد.\n📌 دلیل: {reason}")
+    contact_markup = types.InlineKeyboardMarkup()
+    contact_button = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+    contact_markup.add(contact_button)
 
+    try:
+        bot.send_message(CHANNEL_USERNAME, caption, reply_markup=contact_markup)
+    except Exception as e:
+        bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:\n{e}")
 
-# ======= اجرای ربات با Flask =======
-app = Flask(__name__)
-
-@app.route('/', methods=['GET'])
-def index():
-    return '✅ Bot is alive and running!', 200
-
-@app.route('/', methods=['POST'])
-def webhook():
-    update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
-    bot.process_new_updates([update])
-    return 'ok', 200
-
-def run():
-    app.run(host='0.0.0.0', port=8080)
-
-threading.Thread(target=run).start()
-
-bot.infinity_polling()
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
