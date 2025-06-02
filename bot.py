@@ -338,57 +338,52 @@ def handle_admin_response(message):
 
 
 
-# ======= مسیر مرحله‌ای درخواست اکانت بر اساس وضعیت کاربر =======
-@bot.message_handler(func=lambda m: user_data.get(m.chat.id, {}).get('state') in ['request_skins', 'request_price'])
-def handle_request_states(message):
-    state = user_data[message.chat.id].get('state')
+# ======= سیستم اکانت درخواستی با الگویی مشابه ثبت آگهی =======
+def get_requested_skins(message):
+    if check_back(message): return
+    user_data[message.chat.id]['requested_skins'] = message.text
+    bot.send_message(message.chat.id, "حداکثر قیمتی که می‌خوای هزینه کنی رو وارد کن:")
+    bot.register_next_step_handler(message, get_requested_price)
 
-    if state == 'request_skins':
-        user_data[message.chat.id]['requested_skins'] = message.text
-        user_data[message.chat.id]['state'] = 'request_price'
-        bot.send_message(message.chat.id, "حداکثر قیمتی که می‌خوای هزینه کنی رو وارد کن:")
+def get_requested_price(message):
+    if check_back(message): return
+    user_data[message.chat.id]['max_price'] = message.text
+    bot.send_message(message.chat.id, "درخواستت ثبت شد و برای بررسی به ادمین ارسال شد.")
+    send_request_to_admin(message.chat.id)
 
-    elif state == 'request_price':
-        user_data[message.chat.id]['max_price'] = message.text
-        user_data[message.chat.id].pop('state', None)
+def send_request_to_admin(user_id):
+    data = user_data[user_id]
+    caption = f"درخواست اکانت:
 
-        bot.send_message(message.chat.id, "درخواستت ثبت شد و برای بررسی به ادمین ارسال شد.")
+"               f"🧩 اسکین‌های دلخواه: {data['requested_skins']}
+"               f"💰 حداکثر قیمت: {data['max_price']} تومان
+"               f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
 
-        caption = f"درخواست اکانت:\n\nاسکین‌های دلخواه: {user_data[message.chat.id]['requested_skins']}\nحداکثر قیمت: {user_data[message.chat.id]['max_price']} تومان\nدرخواست‌دهنده: @{message.from_user.username or 'نامشخص'}"
+    markup = types.InlineKeyboardMarkup()
+    approve_button = types.InlineKeyboardButton("✅ تأیید درخواست (کد دلخواه)", callback_data=f"reqapprove_{user_id}")
+    reject_button = types.InlineKeyboardButton("❌ رد درخواست (نوشتن دلیل)", callback_data=f"reqreject_{user_id}")
+    markup.add(approve_button, reject_button)
 
-        markup = types.InlineKeyboardMarkup()
-        markup.add(
-            types.InlineKeyboardButton("تأیید درخواست", callback_data=f"reqapprove_{message.chat.id}"),
-            types.InlineKeyboardButton("رد درخواست", callback_data=f"reqreject_{message.chat.id}")
-        )
+    bot.send_message(ADMIN_ID, caption, reply_markup=markup)
 
-        pending_codes[ADMIN_ID] = {'user_id': message.chat.id}
-        bot.send_message(ADMIN_ID, caption, reply_markup=markup)
+@bot.callback_query_handler(func=lambda call: call.data.startswith('reqapprove_') or call.data.startswith('reqreject_'))
+def handle_request_callback(call):
+    parts = call.data.split('_')
+    action = parts[0]
+    user_id = int(parts[1])
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith("reqapprove_") or call.data.startswith("reqreject_"))
-def handle_request_decision(call):
-    chat_id = int(call.data.split("_")[1])
-    action = call.data.split("_")[0]
+    if user_id not in user_data:
+        bot.answer_callback_query(call.id, "اطلاعات درخواست یافت نشد.")
+        return
 
-    pending_codes[ADMIN_ID] = {'user_id': chat_id, 'approve': action == "reqapprove"}
-    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
+    if action == 'reqapprove':
+        bot.send_message(ADMIN_ID, "✅ لطفاً یک کد دلخواه برای این درخواست وارد کنید:")
+        pending_codes[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
-    if action == "reqapprove":
-        bot.send_message(ADMIN_ID, "لطفاً یک کد تایید وارد کنید:")
-    else:
-        bot.send_message(ADMIN_ID, "لطفاً دلیل رد درخواست را بنویسید:")
+    elif action == 'reqreject':
+        bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
+        pending_rejections[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
-@bot.message_handler(func=lambda m: m.chat.id == ADMIN_ID and ADMIN_ID in pending_codes and 'approve' in pending_codes[ADMIN_ID])
-def handle_admin_confirmation_or_reject(message):
-    data = pending_codes.pop(ADMIN_ID)
-    user_id = data['user_id']
-    approve = data['approve']
-
-    if approve:
-        code = message.text.strip()
-        bot.send_message(user_id, f"درخواست شما تایید شد.\nکد تایید: {code}\nلطفا این کد را به ادمین ارسال کنید.")
-        post = f"درخواست تأیید شده:\nاسکین‌ها: {user_data[user_id]['requested_skins']}\nقیمت: {user_data[user_id]['max_price']} تومان\nکد تایید: {code}"
-        bot.send_message(CHANNEL_USERNAME, post)
-    else:
-        reason = message.text.strip()
-        bot.send_message(user_id, f"درخواست شما رد شد.\nدلیل: {reason}")
+# داخل handler ادمین اصلی (handle_admin_text) نیازی به تغییر خاص نیست چون همون متغیرهای pending_codes و pending_rejections استفاده می‌شن
