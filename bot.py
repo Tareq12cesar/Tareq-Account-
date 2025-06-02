@@ -312,12 +312,11 @@ def send_request_to_admin(user_id):
               f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
 
     markup = types.InlineKeyboardMarkup()
-    approve_button = types.InlineKeyboardButton("✅ تأیید درخواست (وارد کردن کد)", callback_data=f"approve_buy_{user_id}")
-    reject_button = types.InlineKeyboardButton("❌ رد درخواست (نوشتن دلیل)", callback_data=f"reject_buy_{user_id}")
-    markup.add(approve_button, reject_button)
+approve_button = types.InlineKeyboardButton("✅ تأیید درخواست (وارد کردن کد)", callback_data=f"approve_buy_{user_id}")
+reject_button = types.InlineKeyboardButton("❌ رد درخواست (نوشتن دلیل)", callback_data=f"reject_buy_{user_id}")
+markup.add(approve_button, reject_button)
 
-    bot.send_message(ADMIN_ID, caption, reply_markup=markup)
-    
+bot.send_message(ADMIN_ID, caption, reply_markup=markup)
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
 
