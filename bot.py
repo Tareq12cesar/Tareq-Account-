@@ -233,8 +233,7 @@ def calculate_price(message):
         return
 
     bot.send_message(message.chat.id, "❌ لطفاً از دکمه‌ها استفاده کنید.")
-    send_main_menu(message.chat.id)
-
+    send_skin_selection_menu(message.chat.id)
 def get_skin_count(message, skin_type):
     try:
         count = int(message.text.strip())
@@ -251,7 +250,7 @@ def get_skin_count(message, skin_type):
         message.chat.id,
         f"✅ تعداد اسکین‌های دسته {skin_type} ثبت شد.\n\nلطفاً دسته بعدی را انتخاب کنید یا «قیمت نهایی» را بزنید."
     )
-    send_skin_selection_menu(message.chat.id)
+    send_main_menu(message.chat.id)
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
