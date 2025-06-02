@@ -454,22 +454,9 @@ def handle_admin_input(message):
         # ارسال به کاربر
         bot.send_message(user_id, f"✅ درخواست شما تایید شد.\nکد تایید: `{code}`\nلطفا این کد را به ادمین ارسال کنید.", parse_mode="Markdown")
 
-        
-# ارسال به کانال
-caption = f"📌 درخواست تایید شده:
-
-" \
-          f"🎯 اسکین‌های مورد نظر: {data['skins']}
-" \
-          f"💵 حداکثر قیمت: {data['price']}
-" \
-          f"🆔 کد تایید: {code}"
-try:
-    bot.send_message(CHANNEL_USERNAME, caption)
-except Exception as e:
-    bot.send_message(ADMIN_ID, f"❌ خطا در ارسال به کانال:
-{e}")
-
+        # ارسال به کانال
+        caption = f"📌 درخواست تایید شده:\n\n"                   f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"                   f"💵 حداکثر قیمت: {data['price']}\n"                   f"🆔 کد تایید: {code}"
+        bot.send_message(CHANNEL_USERNAME, caption)
 
     elif ADMIN_ID in pending_request_rejections:
         user_id = pending_request_rejections.pop(ADMIN_ID)
