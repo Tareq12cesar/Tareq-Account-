@@ -333,11 +333,11 @@ def handle_request_decision(message):
 حداکثر قیمت: {user_data[chat_id]['max_price']} تومان
 کد تایید: {code}"""
 " \
-                  f"🎯 اسکین‌های دلخواه: {data.get('requested_skins', '---')}
+                  f" اسکین‌های دلخواه: {data.get('requested_skins', '---')}
 " \
-                  f"💰 حداکثر قیمت: {data.get('max_price', '---')} تومان
+                  f" حداکثر قیمت: {data.get('max_price', '---')} تومان
 " \
-                  f"🆔 کد درخواست: {code}"
+                  f" کد درخواست: {code}"
 
         markup = types.InlineKeyboardMarkup()
         contact_button = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
