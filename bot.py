@@ -452,10 +452,10 @@ caption = f"📌 درخواست تایید شده:\n\n" \
           f"💵 حداکثر قیمت: {data['price']}\n" \
           f"🆔 کد تایید: {code}"
    try:
-   bot.send_message(CHANNEL_USERNAME, caption)
-   except Exception as e:
-    bot.send_message(ADMIN_ID, f"❌ خطا در ارسال به کانال:\n{e}")
-
+    bot.send_message(CHANNEL_USERNAME, caption)
+except Exception as e:
+    bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:\n{e}")
+    
     elif ADMIN_ID in pending_request_rejections:
         user_id = pending_request_rejections.pop(ADMIN_ID)
         reason = message.text.strip()
