@@ -46,7 +46,9 @@ def handle_buttons(message):
         bot.send_message(message.chat.id, "لطفاً نام کالکشن خود را وارد کنید:")
         bot.register_next_step_handler(message, get_collection)
     elif message.text == "اکانت درخواستی":
-        bot.send_message(message.chat.id, "لطفاً مشخصات اکانتی که مدنظر دارید، با حداکثر قیمتی که می‌خواید هزینه کنید را ارسال کنید.")
+        user_data[message.from_user.id] = {}
+        bot.send_message(message.chat.id, "🧩 لطفاً اسکین‌هایی که می‌خوای داخل اکانت باشه رو تایپ کن:")
+        bot.register_next_step_handler(message, get_requested_skins)
     elif message.text == "مشاهده آگهی‌ها":
         markup = types.InlineKeyboardMarkup()
         channel_button = types.InlineKeyboardButton("🔗 رفتن به کانال آگهی‌ها", url=CHANNEL_LINK)
@@ -176,7 +178,7 @@ user_data = {}
 
 def send_skin_selection_menu(chat_id):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=1)  # ستون به جای ۲
-    markup.add("Supreme", "Grand", "Exquisite", "Deluxe", "قیمت نهایی", "بازگشت")
+    markup.add("Supreme", "Grand", "Exquisite", "Deluxe", "بازگشت", "قیمت نهایی")
     bot.send_message(chat_id, "➕ انتخاب بعدی؟", reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text in ["Supreme", "Grand", "Exquisite", "Deluxe", "قیمت نهایی", "بازگشت"])
@@ -217,7 +219,7 @@ def calculate_price(message):
 
         final_message = "💵 قیمت نهایی کل اسکین‌ها:\n\n" + "\n".join(summary_lines) + f"\n\n💰 جمع کل: {total_price:,} تومان\n\n💡 قیمت بالا ارزش اکانت شماست\nبرای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید."
         bot.send_message(message.chat.id, final_message)
-        send_menu(message.chat.id)
+        send_skin_selection_menu(message.chat.id)
         return
 
     valid_skin_types = ["Supreme", "Grand", "Exquisite", "Deluxe"]
@@ -277,3 +279,95 @@ def run():
 threading.Thread(target=run).start()
 
 bot.infinity_polling()
+
+
+
+def get_requested_skins(message):
+    if check_back(message): return
+    user_data[message.chat.id]['requested_skins'] = message.text
+    bot.send_message(message.chat.id, "💰 حداکثر قیمتی که می‌خوای هزینه کنی رو بگو (به تومان):")
+    bot.register_next_step_handler(message, get_requested_budget)
+
+def get_requested_budget(message):
+    if check_back(message): return
+    user_data[message.chat.id]['max_price'] = message.text
+
+    summary = f"📥 درخواست اکانت ثبت شد:
+
+"               f"🎯 اسکین‌های دلخواه: {user_data[message.chat.id]['requested_skins']}
+"               f"💰 حداکثر قیمت: {user_data[message.chat.id]['max_price']} تومان
+
+"               f"✅ ادمین بررسی می‌کنه و اگر مورد مناسبی بود بهت پیام میده."
+
+    bot.send_message(message.chat.id, "✅ درخواستت ثبت شد و برای بررسی به ادمین ارسال شد.")
+
+    caption = f"📥 درخواست اکانت:
+
+" \
+              f"🎯 اسکین‌های دلخواه: {user_data[message.chat.id]['requested_skins']}
+" \
+              f"💰 حداکثر قیمت: {user_data[message.chat.id]['max_price']} تومان
+
+" \
+              f"👤 درخواست‌دهنده: @{message.from_user.username or 'نامشخص'}"
+
+    markup = types.InlineKeyboardMarkup()
+    approve_btn = types.InlineKeyboardButton("✅ تأیید درخواست", callback_data=f"reqapprove_{message.chat.id}")
+    reject_btn = types.InlineKeyboardButton("❌ رد درخواست", callback_data=f"reqreject_{message.chat.id}")
+    markup.add(approve_btn, reject_btn)
+
+    pending_requests[ADMIN_ID] = {'user_id': message.chat.id}
+    bot.send_message(ADMIN_ID, caption, reply_markup=markup)
+
+
+
+pending_requests = {}
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('reqapprove_') or call.data.startswith('reqreject_'))
+def handle_request_callback(call):
+    parts = call.data.split('_')
+    action = parts[0]
+    user_id = int(parts[1])
+
+    if action == 'reqapprove':
+        bot.send_message(ADMIN_ID, "🟢 لطفاً یک کد برای این درخواست وارد کنید:")
+        pending_requests[ADMIN_ID]['approve'] = True
+        pending_requests[ADMIN_ID]['user_id'] = user_id
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+
+    elif action == 'reqreject':
+        bot.send_message(ADMIN_ID, "🔴 لطفاً دلیل رد درخواست را بنویسید:")
+        pending_requests[ADMIN_ID]['approve'] = False
+        pending_requests[ADMIN_ID]['user_id'] = user_id
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+
+@bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID and ADMIN_ID in pending_requests)
+def handle_request_decision(message):
+    decision = pending_requests.pop(ADMIN_ID)
+    user_id = decision['user_id']
+    approved = decision['approve']
+
+    if approved:
+        code = message.text.strip()
+        data = user_data.get(user_id, {})
+        caption = f"📢 درخواست تأیید شده:
+
+" \
+                  f"🎯 اسکین‌های دلخواه: {data.get('requested_skins', '---')}
+" \
+                  f"💰 حداکثر قیمت: {data.get('max_price', '---')} تومان
+" \
+                  f"🆔 کد درخواست: {code}"
+
+        markup = types.InlineKeyboardMarkup()
+        contact_button = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+        markup.add(contact_button)
+
+        bot.send_message(CHANNEL_USERNAME, caption, reply_markup=markup)
+        bot.send_message(user_id, f"✅ درخواستت با موفقیت در کانال منتشر شد.
+کد درخواست: {code}")
+
+    else:
+        reason = message.text.strip()
+        bot.send_message(user_id, f"❌ متأسفانه درخواستت توسط ادمین رد شد.
+دلیل: {reason}")
