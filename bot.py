@@ -217,7 +217,7 @@ def calculate_price(message):
 
         final_message = "💵 قیمت نهایی کل اسکین‌ها:\n\n" + "\n".join(summary_lines) + f"\n\n💰 جمع کل: {total_price:,} تومان\n\n💡 قیمت بالا ارزش اکانت شماست\nبرای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید."
         bot.send_message(message.chat.id, final_message)
-        send_skin_selection_menu(message.chat.id)
+        send_menu(message.chat.id)
         return
 
     valid_skin_types = ["Supreme", "Grand", "Exquisite", "Deluxe"]
