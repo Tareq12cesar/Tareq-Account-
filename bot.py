@@ -333,8 +333,7 @@ def handle_request_decision(message):
 حداکثر قیمت: {user_data[chat_id]['max_price']} تومان
 کد تایید: {code}"""
 " \
-                  f" اسکین‌های دلخواه: {data.get('requested_skins', '---')}
-" \
+                  caption = f"اسکین‌های دلخواه: {data.get('requested_skins', '---')}"
                   f" حداکثر قیمت: {data.get('max_price', '---')} تومان
 " \
                   f" کد درخواست: {code}"
