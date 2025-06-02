@@ -45,6 +45,8 @@ def handle_buttons(message):
         user_data[message.from_user.id] = {'user_id': message.from_user.id, 'username': message.from_user.username}
         bot.send_message(message.chat.id, "لطفاً نام کالکشن خود را وارد کنید:")
         bot.register_next_step_handler(message, get_collection)
+    elif message.text == "اکانت درخواستی":
+        bot.send_message(message.chat.id, "لطفاً مشخصات اکانتی که مدنظر دارید، با حداکثر قیمتی که می‌خواید هزینه کنید را ارسال کنید.")
     elif message.text == "مشاهده آگهی‌ها":
         markup = types.InlineKeyboardMarkup()
         channel_button = types.InlineKeyboardButton("🔗 رفتن به کانال آگهی‌ها", url=CHANNEL_LINK)
@@ -59,8 +61,6 @@ def handle_buttons(message):
          markup.add("بازگشت")
          bot.send_message(message.chat.id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
          bot.register_next_step_handler(message, calculate_price)
-    elif message.text == "اکانت درخواستی":
-        request_account_start(message)
     elif message.text == "بازگشت":
         send_menu(message.chat.id)
 
@@ -257,6 +257,7 @@ def get_skin_count(message, skin_type):
         f"✅ تعداد اسکین‌های دسته {skin_type} ثبت شد.\n\nلطفاً دسته بعدی را انتخاب کنید یا «قیمت نهایی» را بزنید."
     )
     send_skin_selection_menu(message.chat.id)
+
 # ======= سیستم اکانت درخواستی =======
 
 request_data = {}
@@ -314,7 +315,6 @@ def confirm_request_submission(message):
 
     bot.send_message(ADMIN_ID, caption, reply_markup=markup)
     bot.send_message(user_id, "📨 درخواست شما برای بررسی به ادمین ارسال شد.", reply_markup=types.ReplyKeyboardRemove())
-    send_menu(user_id))
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('req_approve_') or call.data.startswith('req_reject_'))
 def handle_request_response(call):
@@ -411,8 +411,7 @@ def confirm_request_submission(message):
     markup.add(approve_btn, reject_btn)
 
     bot.send_message(ADMIN_ID, caption, reply_markup=markup)
-    bot.send_message(user_id, "📨 درخواست شما برای بررسی به ادمین ارسال شد.", reply_markup=types.ReplyKeyboardRemove()
-    send_menu(user_id))
+    bot.send_message(user_id, "📨 درخواست شما برای بررسی به ادمین ارسال شد.", reply_markup=types.ReplyKeyboardRemove())
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('req_approve_') or call.data.startswith('req_reject_'))
 def handle_request_response(call):
@@ -454,8 +453,7 @@ def handle_admin_input(message):
         user_id = pending_request_rejections.pop(ADMIN_ID)
         reason = message.text.strip()
         bot.send_message(user_id, f"❌ درخواست شما رد شد.\n📌 دلیل: {reason}")
-
-
+        
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
 
