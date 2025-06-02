@@ -365,16 +365,11 @@ def handle_request_approval_input(message):
     )
 
     caption = (
-        f"📌 درخواست خرید تایید شده:
-
-"
-        f"🎯 اسکین‌های مورد نظر: {data['skins']}
-"
-        f"💵 حداکثر قیمت: {data['price']}
-"
+        f"📌 درخواست خرید تایید شده:\n\n"
+        f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"
+        f"💵 حداکثر قیمت: {data['price']}\n"
         f"🆔 کد تایید: {code}"
     )
-
     contact_markup = types.InlineKeyboardMarkup()
     contact_btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
     contact_markup.add(contact_btn)
