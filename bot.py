@@ -281,41 +281,21 @@ threading.Thread(target=run).start()
 bot.infinity_polling()
 
 
-
-def get_requested_skins(message):
-    if check_back(message): return
-    user_data[message.chat.id]['requested_skins'] = message.text
-    bot.send_message(message.chat.id, "💰 حداکثر قیمتی که می‌خوای هزینه کنی رو بگو (به تومان):")
-    bot.register_next_step_handler(message, get_requested_budget)
-
 def get_requested_budget(message):
     if check_back(message): return
     user_data[message.chat.id]['max_price'] = message.text
 
-    # نیازی به این خط نیست چون summary استفاده نمی‌شه
-    # یا اگه خواستی نگه‌داری:
-    summary = f"درخواست ثبت شد:\n\nاسکین‌های دلخواه: {user_data[message.chat.id]['requested_skins']}\nحداکثر قیمت: {user_data[message.chat.id]['max_price']} تومان"
+    bot.send_message(message.chat.id, "درخواستت ثبت شد و برای بررسی به ادمین ارسال شد.")
 
-    bot.send_message(message.chat.id, "✅ درخواستت ثبت شد و برای بررسی به ادمین ارسال شد.")
-
-    caption = f"📥 درخواست اکانت:\n\n🎯 اسکین‌های دلخواه: {user_data[message.chat.id]['requested_skins']}\n💰 حداکثر قیمت: {user_data[message.chat.id]['max_price']} تومان\n👤 درخواست‌دهنده: @{message.from_user.username or 'نامشخص'}"
-
-" \
-              f"🎯 اسکین‌های دلخواه: {user_data[message.chat.id]['requested_skins']}
-" \
-              f"💰 حداکثر قیمت: {user_data[message.chat.id]['max_price']} تومان
-
-" \
-              f"👤 درخواست‌دهنده: @{message.from_user.username or 'نامشخص'}"
+    caption = f"درخواست اکانت:\n\nاسکین‌های دلخواه: {user_data[message.chat.id]['requested_skins']}\nحداکثر قیمت: {user_data[message.chat.id]['max_price']} تومان\nدرخواست‌دهنده: @{message.from_user.username or 'نامشخص'}"
 
     markup = types.InlineKeyboardMarkup()
-    approve_btn = types.InlineKeyboardButton("✅ تأیید درخواست", callback_data=f"reqapprove_{message.chat.id}")
-    reject_btn = types.InlineKeyboardButton("❌ رد درخواست", callback_data=f"reqreject_{message.chat.id}")
+    approve_btn = types.InlineKeyboardButton("تأیید درخواست", callback_data=f"reqapprove_{message.chat.id}")
+    reject_btn = types.InlineKeyboardButton("رد درخواست", callback_data=f"reqreject_{message.chat.id}")
     markup.add(approve_btn, reject_btn)
 
     pending_requests[ADMIN_ID] = {'user_id': message.chat.id}
     bot.send_message(ADMIN_ID, caption, reply_markup=markup)
-
 
 
 pending_requests = {}
