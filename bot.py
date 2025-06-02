@@ -176,7 +176,7 @@ user_data = {}
 
 def send_skin_selection_menu(chat_id):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=1)  # ستون به جای ۲
-    markup.add("Supreme", "Grand", "Exquisite", "Deluxe", "بازگشت", "قیمت نهایی")
+    markup.add("Supreme", "Grand", "Exquisite", "Deluxe", "قیمت نهایی", "بازگشت")
     bot.send_message(chat_id, "➕ انتخاب بعدی؟", reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text in ["Supreme", "Grand", "Exquisite", "Deluxe", "قیمت نهایی", "بازگشت"])
