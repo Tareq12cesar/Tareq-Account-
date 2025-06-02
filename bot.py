@@ -314,6 +314,7 @@ def confirm_request_submission(message):
 
     bot.send_message(ADMIN_ID, caption, reply_markup=markup)
     bot.send_message(user_id, "📨 درخواست شما برای بررسی به ادمین ارسال شد.", reply_markup=types.ReplyKeyboardRemove())
+    send_menu(user_id)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('req_approve_') or call.data.startswith('req_reject_'))
 def handle_request_response(call):
@@ -411,6 +412,7 @@ def confirm_request_submission(message):
 
     bot.send_message(ADMIN_ID, caption, reply_markup=markup)
     bot.send_message(user_id, "📨 درخواست شما برای بررسی به ادمین ارسال شد.", reply_markup=types.ReplyKeyboardRemove())
+    send_menu(user_id)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('req_approve_') or call.data.startswith('req_reject_'))
 def handle_request_response(call):
@@ -444,7 +446,7 @@ def handle_admin_input(message):
         # ارسال به کاربر
         bot.send_message(user_id, f"✅ درخواست شما تایید شد.\nکد تایید: `{code}`\nلطفا این کد را به ادمین ارسال کنید.", parse_mode="Markdown")
 
-         # ارسال به کانال
+        # ارسال به کانال
         caption = f"📌 درخواست تایید شده:\n\n"                   f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"                   f"💵 حداکثر قیمت: {data['price']}\n"                   f"🆔 کد تایید: {code}"
         bot.send_message(CHANNEL_USERNAME, caption)
 
@@ -473,4 +475,3 @@ def run():
 threading.Thread(target=run).start()
 
 bot.infinity_polling()
-        
