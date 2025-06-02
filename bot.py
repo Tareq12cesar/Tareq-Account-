@@ -60,7 +60,7 @@ def handle_buttons(message):
          bot.send_message(message.chat.id, "✅ لطفاً نوع اسکین‌های خود را انتخاب کنید:", reply_markup=markup)
          bot.register_next_step_handler(message, calculate_price)
     elif message.text == "اکانت درخواستی":
-        request_account_start(message)
+        start_buy_request(message)
     elif message.text == "بازگشت":
         send_menu(message.chat.id)
 
