@@ -435,37 +435,32 @@ def handle_request_response(call):
 @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
 def handle_admin_input(message):
     if ADMIN_ID in pending_request_approvals:
-        user_id = pending_request_approvals.pop(ADMIN_ID)
-        code = message.text.strip()
+    user_id = pending_request_approvals.pop(ADMIN_ID)
+    code = message.text.strip()
+    data = request_data.get(user_id)
 
-        data = request_data.get(user_id)
-        if not data:
-            bot.send_message(ADMIN_ID, "❌ اطلاعات درخواست یافت نشد.")
-            return
+    if not data:
+        bot.send_message(ADMIN_ID, "❌ درخواست پیدا نشد.")
+        return
 
-        # ارسال به کاربر
-        bot.send_message(user_id, f"✅ درخواست شما تایید شد.\nکد تایید: `{code}`\nلطفا این کد را به ادمین ارسال کنید.", parse_mode="Markdown")
+    bot.send_message(user_id, "✅ درخواست شما تایید شد.")
 
-        # ارسال به کانال
-        # ساخت متن کپشن برای ارسال به کانال
-caption = (
-    f"📌 درخواست تایید شده:\n\n"
-    f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"
-    f"💵 حداکثر قیمت: {data['price']}\n"
-    f"🆔 کد تایید: {code}"
-)
+    caption = (
+        f"📌 درخواست تایید شده:\n\n"
+        f"🎯 اسکین‌های مورد نظر: {data['skins']}\n"
+        f"💵 حداکثر قیمت: {data['price']}\n"
+        f"🆔 کد تایید: {code}"
+    )
 
-# تلاش برای ارسال پیام به کانال
-try:
-    bot.send_message(CHANNEL_USERNAME, caption)
-except Exception as e:
-    bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:\n{e}")
-    
-    elif ADMIN_ID in pending_request_rejections:
-        user_id = pending_request_rejections.pop(ADMIN_ID)
-        reason = message.text.strip()
-        bot.send_message(user_id, f"❌ درخواست شما رد شد.\n📌 دلیل: {reason}")
+    try:
+        bot.send_message(CHANNEL_USERNAME, caption)
+    except Exception as e:
+        bot.send_message(ADMIN_ID, f"❌ ارسال به کانال با خطا مواجه شد:\n{e}")
 
+elif ADMIN_ID in pending_request_rejections:
+    user_id = pending_request_rejections.pop(ADMIN_ID)
+    reason = message.text.strip()
+    bot.send_message(user_id, f"❌ درخواست شما رد شد.\n📌 دلیل: {reason}")
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
