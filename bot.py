@@ -439,7 +439,7 @@ def handle_admin_input(message):
 
         data = request_data.get(user_id)
     if not data:
-        bot.send_message(ADMIN_ID, "❌ اطلاعات درخواست یافت نشد.")
+        bot.send_message(ADMIN_ID, "📥 DEBUG: توی تابع handle_admin_input اومدم.")
         return
 
     # ارسال به کاربر
