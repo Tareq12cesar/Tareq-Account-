@@ -257,8 +257,8 @@ def get_skin_count(message, skin_type):
         f"✅ تعداد اسکین‌های دسته {skin_type} ثبت شد.\n\nلطفاً دسته بعدی را انتخاب کنید یا «قیمت نهایی» را بزنید."
     )
     send_skin_selection_menu(message.chat.id)
-# ======= سیستم اکانت درخواستی =======
-    @bot.message_handler(func=lambda message: message.text == " اکانت درخواستی ")
+# ======= سیستم اکانت درخواستی ====== 
+@bot.message_handler(func=lambda message: message.text == " اکانت درخواستی ")
 def start_buy_request(message):
     user_data[message.chat.id] = {'username': message.from_user.username}
     bot.send_message(message.chat.id, "🔍 اسکین‌هایی که می‌خوای تو اکانت باشه رو تایپ کن:")
