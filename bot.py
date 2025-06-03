@@ -10,9 +10,11 @@ CHANNEL_USERNAME = '@filmskina'  # یوزرنیم کانال
 CHANNEL_LINK = 'https://t.me/filmskina'
 
 # ======= تنظیمات عضویت اجباری =======
-FORCE_JOIN_CHANNEL = '@TareqMlbb'
-FORCE_JOIN_LINK = 'https://t.me/TareqMlbb'
-  # لینک کانال
+REQUIRED_CHANNELS = [
+    {'username': '@TareqMlbb', 'link': 'https://t.me/TareqMlbb'},
+    {'username': '@Mobile_Legend_ir', 'link': 'https://t.me/Mobile_Legend_ir'},
+    {'username': '@Shop_MLBB', 'link': 'https://t.me/Shop_MLBB'},
+]
 
 bot = telebot.TeleBot(BOT_TOKEN)
 user_data = {}
@@ -38,20 +40,21 @@ def check_back(message):
         return True
     return False
 def is_user_joined(user_id):
-    try:
-        member = bot.get_chat_member(FORCE_JOIN_CHANNEL, user_id)
-        return member.status in ["member", "administrator", "creator"]
-    except:
-        return False
+    for ch in REQUIRED_CHANNELS:
+        try:
+            member = bot.get_chat_member(ch['username'], user_id)
+            if member.status in ['left', 'kicked']:
+                return False
+        except:
+            return False
+    return True
 
 def send_force_join_prompt(chat_id):
     markup = types.InlineKeyboardMarkup()
-    join_btn = types.InlineKeyboardButton("📢 عضویت در کانال", url=FORCE_JOIN_LINK)
-    check_btn = types.InlineKeyboardButton("🔄 بررسی عضویت", callback_data="check_join")
-    markup.add(join_btn)
-    markup.add(check_btn)
-    bot.send_message(chat_id, "❗ برای استفاده از ربات ابتدا عضو کانال زیر شوید:", reply_markup=markup)
-  
+    for ch in REQUIRED_CHANNELS:
+        markup.add(types.InlineKeyboardButton(f"📢 عضویت در {ch['username']}", url=ch['link']))
+    markup.add(types.InlineKeyboardButton("🔄 بررسی عضویت", callback_data="check_join"))
+    bot.send_message(chat_id, "❗ برای استفاده از ربات، ابتدا عضو همه‌ی کانال‌های زیر شوید:", reply_markup=markup)
 # ======= دستور /start و /menu =======
 @bot.message_handler(commands=['start'])
 def menu_command(message):
@@ -409,16 +412,12 @@ def handle_admin_text(message):
 @bot.callback_query_handler(func=lambda call: call.data == "check_join")
 def check_user_membership(call):
     user_id = call.from_user.id
-    try:
-        member = bot.get_chat_member(FORCE_JOIN_CHANNEL, user_id)
-        if member.status in ["member", "administrator", "creator"]:
-            bot.edit_message_text("✅ عضویت شما تأیید شد. حالا می‌تونید از ربات استفاده کنید.",
-                                  call.message.chat.id, call.message.message_id)
-            send_menu(user_id)
-        else:
-            bot.answer_callback_query(call.id, "❗ هنوز عضو کانال نیستی!", show_alert=True)
-    except:
-        bot.answer_callback_query(call.id, "❌ خطا در بررسی عضویت!", show_alert=True)
+    if is_user_joined(user_id):
+        bot.edit_message_text("✅ عضویت شما تأیید شد. حالا می‌تونید از ربات استفاده کنید.",
+                              call.message.chat.id, call.message.message_id)
+        send_menu(user_id)
+    else:
+        bot.answer_callback_query(call.id, "❗ هنوز در همه کانال‌ها عضو نشدی!", show_alert=True)
 
 app = Flask(__name__)
 
