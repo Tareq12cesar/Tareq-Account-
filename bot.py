@@ -298,30 +298,21 @@ def handle_request_confirmation(call):
 
 def send_request_to_admin(user_id):
 
-    @bot.callback_query_handler(func=lambda call: call.data.startswith('approve_buy_') or call.data.startswith('reject_buy_'))
-def handle_admin_action(call):
-    bot.answer_callback_query(call.id, "⏳ در حال پردازش...")
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('req_approve_') or call.data.startswith('req_reject_'))
+def handle_request_response(call):
+    action, user_id = call.data.split('_')[1:]
+    user_id = int(user_id)
 
-    parts = call.data.split('_')
-    action = parts[0] + "_" + parts[1]
-    user_id = int(parts[2])
-    data = user_data.get(user_id)
-
-    if not data:
-        bot.send_message(ADMIN_ID, "❌ اطلاعات درخواست یافت نشد.")
+    if user_id not in request_data:
+        bot.answer_callback_query(call.id, "❌ اطلاعات درخواست یافت نشد.")
         return
 
-    if action == 'approve_buy':
-        bot.send_message(ADMIN_ID, "✅ لطفاً یک کد تأیید وارد کنید:")
-        pending_codes[ADMIN_ID] = {
-            'user_id': user_id,
-            'message_id': call.message.message_id,
-            'type': 'buy'
-        }
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-
-    elif action == 'reject_buy':
-        bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
+    if action == 'approve':
+        pending_request_approvals[ADMIN_ID] = user_id
+        bot.send_message(ADMIN_ID, "✅ لطفاً یک کد تایید وارد کنید:")
+    else:
+        pending_request_rejections[ADMIN_ID] = user_id
+        bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را وارد کنید:")
         pending_rejections[ADMIN_ID] = {
             'user_id': user_id,
             'message_id': call.message.message_id,
