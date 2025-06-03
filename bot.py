@@ -257,6 +257,7 @@ def get_skin_count(message, skin_type):
         f"✅ تعداد اسکین‌های دسته {skin_type} ثبت شد.\n\nلطفاً دسته بعدی را انتخاب کنید یا «قیمت نهایی» را بزنید."
     )
     send_skin_selection_menu(message.chat.id)
+
 # ======= سیستم اکانت درخواستی =======
 
 @bot.message_handler(func=lambda message: message.text and "اکانت درخواستی" in message.text)
@@ -265,13 +266,11 @@ def start_buy_request(message):
     bot.send_message(message.chat.id, "🔍 اسکین‌هایی که می‌خوای تو اکانت باشه رو تایپ کن:")
     bot.register_next_step_handler(message, get_requested_skins)
 
-
 def get_requested_skins(message):
     if check_back(message): return
     user_data[message.chat.id]['requested_skins'] = message.text
     bot.send_message(message.chat.id, "💰 حداکثر قیمتی که می‌خوای هزینه کنی رو وارد کن:")
     bot.register_next_step_handler(message, confirm_request)
-
 
 def confirm_request(message):
     if check_back(message): return
@@ -289,7 +288,6 @@ def confirm_request(message):
     markup.add(confirm_btn, cancel_btn)
 
     bot.send_message(message.chat.id, caption, reply_markup=markup)
-
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("confirm_send_") or call.data == "cancel_request")
 def handle_request_confirmation(call):
@@ -319,7 +317,7 @@ def send_request_to_admin(user_id):
 @bot.callback_query_handler(func=lambda call: call.data.startswith("buyapprove_") or call.data.startswith("buyreject_"))
 def handle_buy_request_response(call):
     parts = call.data.split('_')
-    action = parts[0]  # buyapprove یا buyreject
+    action = parts[0]
     user_id = int(parts[1])
 
     data = user_data.get(user_id)
@@ -328,22 +326,13 @@ def handle_buy_request_response(call):
         return
 
     if action == 'buyapprove':
-        bot.send_message(ADMIN_ID, "✅ لطفاً یک کد دلخواه برای این درخواست وارد کنید:")
         pending_codes[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id, 'type': 'buy'}
+        bot.send_message(ADMIN_ID, "✅ لطفاً یک کد دلخواه برای این درخواست وارد کنید:")
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
     elif action == 'buyreject':
-        bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
         pending_rejections[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id, 'type': 'buy'}
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-
-    elif action == 'buyreject':
         bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
-        pending_rejections[ADMIN_ID] = {
-            'user_id': user_id,
-            'message_id': call.message.message_id,
-            'type': 'buy'
-        }
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
 @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
@@ -375,7 +364,7 @@ def handle_admin_text(message):
                 bot.send_message(ADMIN_ID, "✅ پیام با موفقیت به کانال و کاربر ارسال شد.")
             except Exception as e:
                 bot.send_message(ADMIN_ID, f"❌ خطا در ارسال پیام: {e}")
-                             
+
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
 
