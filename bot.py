@@ -257,7 +257,7 @@ def get_skin_count(message, skin_type):
         f"✅ تعداد اسکین‌های دسته {skin_type} ثبت شد.\n\nلطفاً دسته بعدی را انتخاب کنید یا «قیمت نهایی» را بزنید."
     )
     send_skin_selection_menu(message.chat.id)
-# ======= سیستم اکانت درخواستی ====== 
+# ======= سیستم اکانت درخواستی =======
 
 @bot.message_handler(func=lambda message: message.text and "اکانت درخواستی" in message.text)
 def start_buy_request(message):
@@ -291,26 +291,12 @@ def confirm_request(message):
     bot.send_message(message.chat.id, caption, reply_markup=markup)
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith("approve_buy_") or call.data.startswith("reject_buy_"))
-def handle_buy_request_response(call):
-    parts = call.data.split('_')
-    action = parts[0]  # approve or reject
-    user_id = int(parts[2])
-
-    data = user_data.get(user_id)
-    if not data:
-        bot.answer_callback_query(call.id, "❌ اطلاعات درخواست یافت نشد.")
+@bot.callback_query_handler(func=lambda call: call.data.startswith("confirm_send_") or call.data == "cancel_request")
+def handle_request_confirmation(call):
+    if call.data == "cancel_request":
+        bot.edit_message_text("❌ درخواست لغو شد.", call.message.chat.id, call.message.message_id)
+        user_data.pop(call.message.chat.id, None)
         return
-
-    if action == 'approve':
-        bot.send_message(ADMIN_ID, "✅ لطفاً یک کد دلخواه برای این درخواست وارد کنید:")
-        pending_codes[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id, 'type': 'buy'}
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-
-    elif action == 'reject':
-        bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
-        pending_rejections[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id, 'type': 'buy'}
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
     user_id = int(call.data.split('_')[2])
     send_request_to_admin(user_id)
@@ -331,6 +317,27 @@ def send_request_to_admin(user_id):
 
     bot.send_message(ADMIN_ID, caption, reply_markup=markup)
 
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("approve_buy_") or call.data.startswith("reject_buy_"))
+def handle_buy_request_response(call):
+    parts = call.data.split('_')
+    action = parts[0]  # approve or reject
+    user_id = int(parts[2])
+
+    data = user_data.get(user_id)
+    if not data:
+        bot.answer_callback_query(call.id, "❌ اطلاعات درخواست یافت نشد.")
+        return
+
+    if action == 'approve':
+        bot.send_message(ADMIN_ID, "✅ لطفاً یک کد دلخواه برای این درخواست وارد کنید:")
+        pending_codes[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id, 'type': 'buy'}
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+
+    elif action == 'reject':
+        bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
+        pending_rejections[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id, 'type': 'buy'}
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
 def handle_admin_text(message):
     if ADMIN_ID in pending_codes:
