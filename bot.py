@@ -53,9 +53,15 @@ def send_force_join_prompt(chat_id):
     bot.send_message(chat_id, "❗ برای استفاده از ربات ابتدا عضو کانال زیر شوید:", reply_markup=markup)
   
 # ======= دستور /start و /menu =======
-@bot.message_handler(commands=['start', 'menu'])
+@bot.message_handler(commands=['start'])
 def menu_command(message):
-    send_menu(message.chat.id)
+    user_id = message.from_user.id
+
+    if not is_user_joined(user_id):
+        send_force_join_prompt(message.chat.id)
+        return
+
+    send_menu(user_id)
 
 # ======= هندل کردن دکمه‌ها =======
 @bot.message_handler(func=lambda message: message.text in ["ثبت آگهی", "اکانت درخواستی", "مشاهده آگهی‌ها", "قیمت یاب اکانت", "بازگشت"])
