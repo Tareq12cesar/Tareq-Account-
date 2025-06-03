@@ -355,14 +355,27 @@ def handle_admin_text(message):
         code = message.text.strip()
         pending = pending_codes.pop(ADMIN_ID)
         user_id = pending['user_id']
-        req_type = pending.get('type', 'ad')  # پیش‌فرض آگهی
+        req_type = pending.get('type')
 
         data = user_data.get(user_id)
         if not data:
-            bot.send_message(ADMIN_ID, "❌ اطلاعات یافت نشد.")
+            bot.send_message(ADMIN_ID, "❌ اطلاعات کاربر یافت نشد.")
             return
 
-        if req_type == 'ad':
+        if req_type == 'buy':
+            caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
+                      f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
+                      f"💰 بودجه: {data['max_budget']} تومان\n" \
+                      f"🆔 کد درخواست: {code}"
+
+            contact_markup = types.InlineKeyboardMarkup()
+            contact_button = types.InlineKeyboardButton("ارتباط با خریدار", url=f"tg://user?id={user_id}")
+            contact_markup.add(contact_button)
+
+            bot.send_message(CHANNEL_USERNAME, caption, reply_markup=contact_markup)
+            bot.send_message(user_id, f"✅ درخواست خرید شما تأیید شد و در کانال منتشر شد.\nکد شما: {code}")
+
+        elif req_type == 'ad':
             caption = f"📢 آگهی تأیید شده:\n\n" \
                       f"🧩 کالکشن: {data['collection']}\n" \
                       f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
@@ -375,31 +388,18 @@ def handle_admin_text(message):
             contact_markup.add(contact_button)
 
             bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=contact_markup)
-            bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی شما: {code}\n\nلطفاً این کد را به ادمین ارسال کنید.")
-        
-        elif req_type == 'buy':
-            caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
-                      f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
-                      f"💰 بودجه: {data['max_budget']} تومان\n" \
-                      f"🆔 کد درخواست: {code}"
-
-            contact_markup = types.InlineKeyboardMarkup()
-            contact_button = types.InlineKeyboardButton("ارتباط با خریدار", url=f"tg://user?id={user_id}")
-            contact_markup.add(contact_button)
-
-            bot.send_message(CHANNEL_USERNAME, caption, reply_markup=contact_markup)
-            bot.send_message(user_id, f"✅ درخواست خرید شما تأیید و در کانال منتشر شد.\nکد شما: {code}")
+            bot.send_message(user_id, f"✅ آگهی شما تأیید شد و در کانال منتشر شد.\nکد: {code}")
 
     elif ADMIN_ID in pending_rejections:
         reason = message.text.strip()
         pending = pending_rejections.pop(ADMIN_ID)
         user_id = pending['user_id']
-        req_type = pending.get('type', 'ad')
+        req_type = pending.get('type')
 
-        if req_type == 'ad':
-            bot.send_message(user_id, f"❌ متأسفانه آگهی شما توسط ادمین رد شد.\nدلیل: {reason}")
-        elif req_type == 'buy':
-            bot.send_message(user_id, f"❌ متأسفانه درخواست خرید شما رد شد.\nدلیل: {reason}")
+        if req_type == 'buy':
+            bot.send_message(user_id, f"❌ درخواست خرید شما رد شد.\nدلیل: {reason}")
+        elif req_type == 'ad':
+            bot.send_message(user_id, f"❌ آگهی شما رد شد.\nدلیل: {reason}")
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
