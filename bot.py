@@ -311,35 +311,44 @@ def send_request_to_admin(user_id):
               f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
 
     markup = types.InlineKeyboardMarkup()
-    approve_button = types.InlineKeyboardButton("✅ تأیید درخواست (وارد کردن کد)", callback_data=f"approve_buy_{user_id}")
-    reject_button = types.InlineKeyboardButton("❌ رد درخواست (نوشتن دلیل)", callback_data=f"reject_buy_{user_id}")
+    approve_button = types.InlineKeyboardButton("✅ تأیید درخواست", callback_data=f"buyapprove_{user_id}")
+    reject_button = types.InlineKeyboardButton("❌ رد درخواست", callback_data=f"buyreject_{user_id}")
     markup.add(approve_button, reject_button)
 
     bot.send_message(ADMIN_ID, caption, reply_markup=markup)
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith("approve_buy_") or call.data.startswith("reject_buy_"))
+@bot.callback_query_handler(func=lambda call: call.data.startswith("buyapprove_") or call.data.startswith("buyreject_"))
 def handle_buy_request_response(call):
-    print("admin clicked approve/reject")  # ← این خط جدید
+    print("👀 admin clicked buyapprove/buyreject")  # برای تست لاگ
 
     parts = call.data.split('_')
-    action = parts[0]
-    user_id = int(parts[2])
+    action = parts[0]  # buyapprove یا buyreject
+    user_id = int(parts[1])
 
     data = user_data.get(user_id)
     if not data:
         bot.answer_callback_query(call.id, "❌ اطلاعات درخواست یافت نشد.")
         return
 
-    if action == 'approve':
+    if action == 'buyapprove':
         bot.send_message(ADMIN_ID, "✅ لطفاً یک کد دلخواه برای این درخواست وارد کنید:")
-        pending_codes[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id, 'type': 'buy'}
+        pending_codes[ADMIN_ID] = {
+            'user_id': user_id,
+            'message_id': call.message.message_id,
+            'type': 'buy'
+        }
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
-    elif action == 'reject':
+    elif action == 'buyreject':
         bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
-        pending_rejections[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id, 'type': 'buy'}
+        pending_rejections[ADMIN_ID] = {
+            'user_id': user_id,
+            'message_id': call.message.message_id,
+            'type': 'buy'
+        }
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+        
 @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
 def handle_admin_text(message):
     if ADMIN_ID in pending_codes:
