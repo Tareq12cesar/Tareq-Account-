@@ -335,8 +335,10 @@ def handle_admin_text(message):
             markup.add(btn)
 
             bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
-            bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد: {code}")
-
+            bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n"
+                          f"کد آگهی: {code}\n\n"
+                          f"این کد رو برای ادمین بفرستید")
+            
         elif req_type == 'buy':
             caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
                       f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
