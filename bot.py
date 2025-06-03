@@ -402,4 +402,4 @@ def run():
 
 threading.Thread(target=run).start()
 
-bot.infinity_polling() 8
+bot.infinity_polling()
