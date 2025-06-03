@@ -11,9 +11,9 @@ CHANNEL_LINK = 'https://t.me/filmskina'
 
 # ======= تنظیمات عضویت اجباری =======
 REQUIRED_CHANNELS = [
-    {'username': '@TareqMlbb', 'link': 'https://t.me/TareqMlbb'},
-    {'username': '@Mobile_Legend_ir', 'link': 'https://t.me/Mobile_Legend_ir'},
-    {'username': '@Shop_MLBB', 'link': 'https://t.me/Shop_MLBB'},
+    {'username': '@TareqMlbb', 'link': 'https://t.me/TareqMlbb', 'title': 'کانال اول'},
+    {'username': '@Mobile_Legend_ir', 'link': 'https://t.me/Mobile_Legend_ir', 'title': 'کانال دوم'},
+    {'username': '@Shop_MLBB', 'link': 'https://t.me/Shop_MLBB', 'title': 'کانال سوم'},
 ]
 
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -52,7 +52,7 @@ def is_user_joined(user_id):
 def send_force_join_prompt(chat_id):
     markup = types.InlineKeyboardMarkup()
     for ch in REQUIRED_CHANNELS:
-        markup.add(types.InlineKeyboardButton(f"📢 عضویت در {ch['username']}", url=ch['link']))
+        markup.add(types.InlineKeyboardButton(f"📢 عضویت در {ch['title']}", url=ch['link']))
     markup.add(types.InlineKeyboardButton("🔄 بررسی عضویت", callback_data="check_join"))
     bot.send_message(chat_id, "❗ برای استفاده از ربات، ابتدا عضو همه‌ی کانال‌های زیر شوید:", reply_markup=markup)
 # ======= دستور /start و /menu =======
