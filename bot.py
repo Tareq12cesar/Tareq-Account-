@@ -54,7 +54,7 @@ def send_force_join_prompt(chat_id):
     for ch in REQUIRED_CHANNELS:
         markup.add(types.InlineKeyboardButton(f"📢 عضویت در {ch['title']}", url=ch['link']))
     markup.add(types.InlineKeyboardButton("🔄 بررسی عضویت", callback_data="check_join"))
-    bot.send_message(chat_id, "❗ برای استفاده از ربات، ابتدا عضو همه‌ی کانال‌های زیر شوید:", reply_markup=markup)
+    bot.send_message(chat_id, "📢 برای کار کردن با ربات، لطفا در کانال‌های زیر عضو شو و بعد دکمه «بررسی عضویت» رو بزن", reply_markup=markup)
 # ======= دستور /start و /menu =======
 @bot.message_handler(commands=['start'])
 def menu_command(message):
