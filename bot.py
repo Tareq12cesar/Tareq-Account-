@@ -338,15 +338,17 @@ def handle_admin_text(message):
             bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد: {code}")
 
         elif req_type == 'buy':
-            caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
-                      f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
-                      f"💰 بودجه: {data['max_budget']} تومان\n" \
-                      f"🆔 کد درخواست: {code}"
+    caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
+              f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
+              f"💰 بودجه: {data['max_budget']} تومان\n" \
+              f"🆔 کد درخواست: {code}"
 
-            btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+    markup = types.InlineKeyboardMarkup()
+    btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+    markup.add(btn)
 
-            bot.send_message(CHANNEL_USERNAME, caption, reply_markup=markup)
-            bot.send_message(user_id, f"✅ درخواست خرید شما تأیید و در کانال منتشر شد.\nکد: {code}")
+    bot.send_message(CHANNEL_USERNAME, caption, reply_markup=markup)
+    bot.send_message(user_id, f"✅ درخواست خرید شما تأیید شد و در کانال منتشر شد.\nکد: {code}")
 
     elif ADMIN_ID in pending_rejections:
         reason = message.text.strip()
