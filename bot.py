@@ -213,7 +213,7 @@ def calculate_price(message):
                 else:
                     price = 700000
             total_price += price
-            summary_lines.append(f"💰 {skin_type}: تعداد = {price:,} تومان")
+            summary_lines.append(f"💰 {skin_type}: تعداد = ")
             final_message = "💵 قیمت نهایی کل اسکین‌ها:\n\n" + "\n".join(summary_lines) + f"\n\n💰 جمع کل: {total_price:,} تومان\n\n💡 قیمت بالا ارزش اکانت شماست\nبرای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید."
         bot.send_message(message.chat.id, final_message)
         user_data.pop(message.chat.id, None)
