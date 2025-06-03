@@ -136,6 +136,15 @@ def handle_admin_response(call):
         pending_rejections[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
+# ======= قیمت‌یاب اکانت =======
+from telebot import types
+
+user_data = {}
+
+def send_skin_selection_menu(chat_id):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=1)  # ستون به جای ۲
+    markup.add("Supreme", "Grand", "Exquisite", "Deluxe", "قیمت نهایی", "بازگشت")
+    bot.send_message(chat_id, "➕ انتخاب بعدی؟", reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text in ["Supreme", "Grand", "Exquisite", "Deluxe", "قیمت نهایی", "بازگشت"])
 def calculate_price(message):
@@ -215,6 +224,7 @@ def get_skin_count(message, skin_type):
         f"✅ تعداد اسکین‌های دسته {skin_type} ثبت شد.\n\nلطفاً دسته بعدی را انتخاب کنید یا «قیمت نهایی» را بزنید."
     )
     send_skin_selection_menu(message.chat.id)
+
 # ======= سیستم اکانت درخواستی =======
 
 @bot.message_handler(func=lambda message: message.text and "اکانت درخواستی" in message.text)
