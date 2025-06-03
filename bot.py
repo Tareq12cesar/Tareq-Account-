@@ -320,8 +320,10 @@ def send_request_to_admin(user_id):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("approve_buy_") or call.data.startswith("reject_buy_"))
 def handle_buy_request_response(call):
+    print("👀 admin clicked approve/reject")  # ← این خط جدید
+
     parts = call.data.split('_')
-    action = parts[0]  # approve or reject
+    action = parts[0]
     user_id = int(parts[2])
 
     data = user_data.get(user_id)
