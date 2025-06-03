@@ -343,9 +343,7 @@ def handle_admin_text(message):
                       f"💰 بودجه: {data['max_budget']} تومان\n" \
                       f"🆔 کد درخواست: {code}"
 
-            markup = types.InlineKeyboardMarkup()
-            btn = types.InlineKeyboardButton("ارتباط با خریدار", url=f"tg://user?id={user_id}")
-            markup.add(btn)
+            btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
 
             bot.send_message(CHANNEL_USERNAME, caption, reply_markup=markup)
             bot.send_message(user_id, f"✅ درخواست خرید شما تأیید و در کانال منتشر شد.\nکد: {code}")
