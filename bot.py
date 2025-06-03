@@ -8,6 +8,9 @@ BOT_TOKEN = '7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
 ADMIN_ID = 6697070308  # آیدی عددی ادمین
 CHANNEL_USERNAME = '@filmskina'  # یوزرنیم کانال
 CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال
+# کانال برای عضویت اجباری
+FORCE_JOIN_CHANNEL = '@TareqMlbb'     # کانال عضویت اجباری
+FORCE_JOIN_LINK = 'https://t.me/TareqMlbb'
 
 bot = telebot.TeleBot(BOT_TOKEN)
 user_data = {}
@@ -15,6 +18,42 @@ pending_codes = {}
 pending_rejections = {}
 
 # ======= دکمه منو =======
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    user_id = message.from_user.id
+
+    try:
+        member = bot.get_chat_member(FORCE_JOIN_CHANNEL, user_id)
+        if member.status in ["member", "administrator", "creator"]:
+            bot.send_message(user_id, "✅ خوش آمدید! شما عضو کانال هستید.")
+            send_menu(user_id)
+            return
+    except:
+        pass
+
+    markup = types.InlineKeyboardMarkup()
+    join_btn = types.InlineKeyboardButton("📢 عضویت در کانال", url=FORCE_JOIN_LINK)
+    check_btn = types.InlineKeyboardButton("🔄 بررسی عضویت", callback_data="check_join")
+    markup.add(join_btn)
+    markup.add(check_btn)
+
+    bot.send_message(user_id, "❗ برای استفاده از ربات ابتدا عضو کانال زیر شوید:", reply_markup=markup)
+
+
+@bot.callback_query_handler(func=lambda call: call.data == "check_join")
+def check_user_membership(call):
+    user_id = call.from_user.id
+    try:
+        member = bot.get_chat_member(FORCE_JOIN_CHANNEL, user_id)
+        if member.status in ["member", "administrator", "creator"]:
+            bot.edit_message_text("✅ عضویت شما تأیید شد. حالا می‌تونید از ربات استفاده کنید.",
+                                  call.message.chat.id, call.message.message_id)
+            send_menu(user_id)
+        else:
+            bot.answer_callback_query(call.id, "❗ هنوز عضو کانال نیستی!", show_alert=True)
+    except:
+        bot.answer_callback_query(call.id, "❌ خطا در بررسی عضویت!", show_alert=True)
+
 def send_menu(chat_id):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     markup.add(
