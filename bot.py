@@ -350,17 +350,6 @@ def handle_admin_text(message):
     bot.send_message(CHANNEL_USERNAME, caption, reply_markup=markup)
     bot.send_message(user_id, f"✅ درخواست خرید شما تأیید شد و در کانال منتشر شد.\nکد: {code}")
 
-    elif ADMIN_ID in pending_rejections:
-        reason = message.text.strip()
-        pending = pending_rejections.pop(ADMIN_ID)
-        user_id = pending['user_id']
-        req_type = pending.get('type', 'ad')
-
-        if req_type == 'ad':
-            bot.send_message(user_id, f"❌ آگهی شما رد شد.\nدلیل: {reason}")
-        elif req_type == 'buy':
-            bot.send_message(user_id, f"❌ درخواست خرید شما رد شد.\nدلیل: {reason}")
-
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
 
