@@ -293,7 +293,7 @@ def confirm_request(message):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('approve_buy_') or call.data.startswith('reject_buy_'))
 def handle_admin_action(call):
-    @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
+   @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
 def handle_admin_reply(message):
     if ADMIN_ID in pending_codes:
         code = message.text.strip()
@@ -308,6 +308,13 @@ def handle_admin_reply(message):
         bot.send_message(user_id, f"✅ درخواست شما تایید شد.\nکد تأیید: {code}\nلطفا این کد را به ادمین ارسال کنید.")
         bot.send_message(CHANNEL_USERNAME, caption)
         pending_codes.pop(ADMIN_ID)
+
+    elif ADMIN_ID in pending_rejections:
+        reason = message.text.strip()
+        user_id = pending_rejections[ADMIN_ID]['user_id']
+
+        bot.send_message(user_id, f"❌ درخواست شما رد شد.\nدلیل: {reason}")
+        pending_rejections.pop(ADMIN_ID)
 
     elif ADMIN_ID in pending_rejections:
         reason = message.text.strip()
