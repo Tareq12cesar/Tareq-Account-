@@ -404,7 +404,7 @@ def handle_admin_text(message):
         if req_type == 'buy':
             bot.send_message(user_id, f"❌ درخواست خرید شما رد شد.\nدلیل: {reason}")
         elif req_type == 'ad':
-            bot.send_message(user_id, f"❌ آگهی شما رد شد.\nدلیل: {reason}"
+            bot.send_message(user_id, f"❌ آگهی شما رد شد.\nدلیل: {reason}")
 
 @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
 def handle_admin_text(message):
