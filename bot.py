@@ -257,7 +257,8 @@ def get_skin_count(message, skin_type):
         f"✅ تعداد اسکین‌های دسته {skin_type} ثبت شد.\n\nلطفاً دسته بعدی را انتخاب کنید یا «قیمت نهایی» را بزنید."
     )
     send_skin_selection_menu(message.chat.id)
-# ======= سیستم اکانت درخواستی ====== 
+
+# ======= سیستم اکانت درخواستی =======
 
 @bot.message_handler(func=lambda message: message.text and "اکانت درخواستی" in message.text)
 def start_buy_request(message):
@@ -265,13 +266,11 @@ def start_buy_request(message):
     bot.send_message(message.chat.id, "🔍 اسکین‌هایی که می‌خوای تو اکانت باشه رو تایپ کن:")
     bot.register_next_step_handler(message, get_requested_skins)
 
-
 def get_requested_skins(message):
     if check_back(message): return
     user_data[message.chat.id]['requested_skins'] = message.text
     bot.send_message(message.chat.id, "💰 حداکثر قیمتی که می‌خوای هزینه کنی رو وارد کن:")
     bot.register_next_step_handler(message, confirm_request)
-
 
 def confirm_request(message):
     if check_back(message): return
@@ -290,7 +289,6 @@ def confirm_request(message):
 
     bot.send_message(message.chat.id, caption, reply_markup=markup)
 
-
 @bot.callback_query_handler(func=lambda call: call.data.startswith("confirm_send_") or call.data == "cancel_request")
 def handle_request_confirmation(call):
     if call.data == "cancel_request":
@@ -301,7 +299,6 @@ def handle_request_confirmation(call):
     user_id = int(call.data.split('_')[2])
     send_request_to_admin(user_id)
     bot.edit_message_text("✅ درخواست شما برای بررسی به ادمین ارسال شد.", call.message.chat.id, call.message.message_id)
-
 
 def send_request_to_admin(user_id):
     data = user_data[user_id]
@@ -316,7 +313,53 @@ def send_request_to_admin(user_id):
     markup.add(approve_button, reject_button)
 
     bot.send_message(ADMIN_ID, caption, reply_markup=markup)
-    
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('approve_buy_') or call.data.startswith('reject_buy_'))
+def handle_admin_buy_action(call):
+    bot.answer_callback_query(call.id, "⏳ در حال پردازش...")
+
+    parts = call.data.split('_')
+    action = parts[0] + '_' + parts[1]
+    user_id = int(parts[2])
+
+    data = user_data.get(user_id)
+    if not data:
+        bot.send_message(ADMIN_ID, "❌ اطلاعات درخواست یافت نشد.")
+        return
+
+    if action == 'approve_buy':
+        bot.send_message(ADMIN_ID, "✅ لطفاً یک کد تایید وارد کنید:")
+        pending_codes[ADMIN_ID] = {'user_id': user_id, 'type': 'buy'}
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+
+    elif action == 'reject_buy':
+        bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
+        pending_rejections[ADMIN_ID] = {'user_id': user_id, 'type': 'buy'}
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+
+@bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
+def handle_admin_reply(message):
+    if ADMIN_ID in pending_codes:
+        code = message.text.strip()
+        user_id = pending_codes[ADMIN_ID]['user_id']
+        data = user_data.get(user_id)
+
+        caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
+                  f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
+                  f"💰 بودجه: {data['max_budget']} تومان\n" \
+                  f"🆔 کد تأیید: {code}"
+
+        bot.send_message(user_id, f"✅ درخواست شما تایید شد.\nکد تأیید: {code}\nلطفاً این کد را به ادمین ارسال کنید.")
+        bot.send_message(CHANNEL_USERNAME, caption)
+        pending_codes.pop(ADMIN_ID)
+
+    elif ADMIN_ID in pending_rejections:
+        reason = message.text.strip()
+        user_id = pending_rejections[ADMIN_ID]['user_id']
+        bot.send_message(user_id, f"❌ درخواست شما رد شد.\nدلیل: {reason}")
+        pending_rejections.pop(ADMIN_ID)
+
+
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
 
