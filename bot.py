@@ -7,10 +7,12 @@ import threading
 BOT_TOKEN = '7933020801:AAHvfiIlfg5frqosVCgY1n1pUFElwQsr7B8'
 ADMIN_ID = 6697070308  # آیدی عددی ادمین
 CHANNEL_USERNAME = '@filmskina'  # یوزرنیم کانال
-CHANNEL_LINK = 'https://t.me/filmskina'  # لینک کانال
-# کانال برای عضویت اجباری
-FORCE_JOIN_CHANNEL = '@TareqMlbb'     # کانال عضویت اجباری
+CHANNEL_LINK = 'https://t.me/filmskina'
+
+# ======= تنظیمات عضویت اجباری =======
+FORCE_JOIN_CHANNEL = '@TareqMlbb'  # کانال عضویت اجباری
 FORCE_JOIN_LINK = 'https://t.me/TareqMlbb'
+  # لینک کانال
 
 bot = telebot.TeleBot(BOT_TOKEN)
 user_data = {}
@@ -18,42 +20,6 @@ pending_codes = {}
 pending_rejections = {}
 
 # ======= دکمه منو =======
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    user_id = message.from_user.id
-
-    try:
-        member = bot.get_chat_member(FORCE_JOIN_CHANNEL, user_id)
-        if member.status in ["member", "administrator", "creator"]:
-            bot.send_message(user_id, "✅ خوش آمدید! شما عضو کانال هستید.")
-            send_menu(user_id)
-            return
-    except:
-        pass
-
-    markup = types.InlineKeyboardMarkup()
-    join_btn = types.InlineKeyboardButton("📢 عضویت در کانال", url=FORCE_JOIN_LINK)
-    check_btn = types.InlineKeyboardButton("🔄 بررسی عضویت", callback_data="check_join")
-    markup.add(join_btn)
-    markup.add(check_btn)
-
-    bot.send_message(user_id, "❗ برای استفاده از ربات ابتدا عضو کانال زیر شوید:", reply_markup=markup)
-
-
-@bot.callback_query_handler(func=lambda call: call.data == "check_join")
-def check_user_membership(call):
-    user_id = call.from_user.id
-    try:
-        member = bot.get_chat_member(FORCE_JOIN_CHANNEL, user_id)
-        if member.status in ["member", "administrator", "creator"]:
-            bot.edit_message_text("✅ عضویت شما تأیید شد. حالا می‌تونید از ربات استفاده کنید.",
-                                  call.message.chat.id, call.message.message_id)
-            send_menu(user_id)
-        else:
-            bot.answer_callback_query(call.id, "❗ هنوز عضو کانال نیستی!", show_alert=True)
-    except:
-        bot.answer_callback_query(call.id, "❌ خطا در بررسی عضویت!", show_alert=True)
-
 def send_menu(chat_id):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     markup.add(
@@ -79,6 +45,11 @@ def menu_command(message):
 
 # ======= هندل کردن دکمه‌ها =======
 @bot.message_handler(func=lambda message: message.text in ["ثبت آگهی", "اکانت درخواستی", "مشاهده آگهی‌ها", "قیمت یاب اکانت", "بازگشت"])
+def handle_buttons(message):
+    if not is_user_joined(message.from_user.id):
+        send_force_join_prompt(message.chat.id)
+        return
+
 def handle_buttons(message):
     if message.text == "ثبت آگهی":
         user_data[message.from_user.id] = {'user_id': message.from_user.id, 'username': message.from_user.username}
@@ -413,6 +384,59 @@ def handle_admin_text(message):
             bot.send_message(user_id, f"❌ آگهی شما رد شد.\nدلیل: {reason}")
         elif req_type == 'buy':
             bot.send_message(user_id, f"❌ درخواست خرید شما رد شد.\nدلیل: {reason}")
+
+# ======= اجرای ربات با Flask =======
+app = Flask(__name__)
+
+@app.route('/', methods=['GET'])
+def index():
+    return '✅ Bot is alive and running!', 200
+
+@app.route('/', methods=['POST'])
+def webhook():
+    update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
+    bot.process_new_updates([update])
+    return 'ok', 200
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+threading.Thread(target=run).start()
+
+bot.infinity_polling()
+
+
+
+def is_user_joined(user_id):
+    try:
+        member = bot.get_chat_member(FORCE_JOIN_CHANNEL, user_id)
+        return member.status in ["member", "administrator", "creator"]
+    except:
+        return False
+
+def send_force_join_prompt(chat_id):
+    markup = types.InlineKeyboardMarkup()
+    join_btn = types.InlineKeyboardButton("📢 عضویت در کانال", url=FORCE_JOIN_LINK)
+    check_btn = types.InlineKeyboardButton("🔄 بررسی عضویت", callback_data="check_join")
+    markup.add(join_btn)
+    markup.add(check_btn)
+    bot.send_message(chat_id, "❗ برای استفاده از ربات ابتدا عضو کانال زیر شوید:", reply_markup=markup)
+
+
+
+@bot.callback_query_handler(func=lambda call: call.data == "check_join")
+def check_user_membership(call):
+    user_id = call.from_user.id
+    try:
+        member = bot.get_chat_member(FORCE_JOIN_CHANNEL, user_id)
+        if member.status in ["member", "administrator", "creator"]:
+            bot.edit_message_text("✅ عضویت شما تأیید شد. حالا می‌تونید از ربات استفاده کنید.",
+                                  call.message.chat.id, call.message.message_id)
+            send_menu(user_id)
+        else:
+            bot.answer_callback_query(call.id, "❗ هنوز عضو کانال نیستی!", show_alert=True)
+    except:
+        bot.answer_callback_query(call.id, "❌ خطا در بررسی عضویت!", show_alert=True)
 
 # ======= اجرای ربات با Flask =======
 app = Flask(__name__)
