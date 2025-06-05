@@ -133,14 +133,18 @@ def get_collection(message):
     bot.send_message(message.chat.id, "⬆️ فرم بالا رو پر کن و بفرست", reply_markup=markup)
 
     bot.register_next_step_handler(message, get_form_text)
-    bot.send_message(message.chat.id, "لطفاً یک ویدئو از اکانت خود ارسال کنید:")
-    bot.register_next_step_handler(message, get_video)
 
 def get_form_text(message):
     if check_back(message): return
+
+    # ایمن‌سازی دیکشنری
+    if message.chat.id not in user_data:
+        user_data[message.chat.id] = {}
+
     user_data[message.chat.id]['info_text'] = message.text
 
-    bot.send_message(message.chat.id, "📹 لطفاً یک ویدئو از اکانت خود ارسال کنید:")
+    # حالا بعد از گرفتن متن فرم، برو مرحله ویدیو
+    bot.send_message(message.chat.id, "📁 لطفاً یک ویدئو از اکانت خود ارسال کنید:")
     bot.register_next_step_handler(message, get_video)
 def get_video(message):
     if check_back(message): return
