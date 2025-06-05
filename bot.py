@@ -6,8 +6,8 @@ import threading
 # ======= تنظیمات اولیه =======
 BOT_TOKEN = '7933020801:AAFScmqUa1qcVljaYdfXJsqHDt7VDspL310'
 ADMIN_ID = 6697070308  # آیدی عددی ادمین
-CHANNEL_USERNAME = '@TareqMlbb'  # یوزرنیم کانال
-CHANNEL_LINK = 'https://t.me/TareqMlbb'
+CHANNEL_USERNAME = '@filmskina'  # یوزرنیم کانال
+CHANNEL_LINK = 'https://t.me/filmskina'
 
 # ======= تنظیمات عضویت اجباری =======
 REQUIRED_CHANNELS = [
@@ -134,10 +134,21 @@ def get_collection(message):
     bot.register_next_step_handler(message, get_form_text)
     
 def get_form_text(message):
-    if check_back(message): return
+    if check_back(message):
+        return
+
+    if message.content_type != 'text':
+        bot.send_message(message.chat.id, "❌ لطفاً فرم را به‌صورت متن ارسال کنید.")
+        bot.register_next_step_handler(message, get_form_text)
+        return
+
+    if message.chat.id not in user_data:
+        user_data[message.chat.id] = {}
+
     user_data[message.chat.id]['info_text'] = message.text
 
-    bot.send_message(message.chat.id, "📹 لطفاً یک ویدئو از اکانت خود ارسال کنید:")
+    # فقط یک بار مرحله‌ی بعد را ثبت کن
+    bot.send_message(message.chat.id, "📁 لطفاً یک ویدئو از اکانت خود ارسال کنید:")
     bot.register_next_step_handler(message, get_video)
 
 
