@@ -134,6 +134,14 @@ def get_collection(message):
 
     # رفتن به مرحله دریافت فرم
     bot.register_next_step_handler(message, get_form_text)
+
+def get_form_text(message):
+    if check_back(message): return
+    user_data[message.chat.id]['info_text'] = message.text
+
+    bot.send_message(message.chat.id, "📹 لطفاً یک ویدئو از اکانت خود ارسال کنید:")
+    bot.register_next_step_handler(message, get_video)
+
 def get_video(message):
     if check_back(message): return
     if message.content_type != 'video':
