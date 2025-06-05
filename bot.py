@@ -74,7 +74,7 @@ def handle_buttons(message):
         return
 
     if message.text == "ثبت آگهی":
-       get_collection(message)
+        get_collection(message)
         bot.register_next_step_handler(message, get_collection)
     elif message.text == "مشاهده آگهی‌ها":
         markup = types.InlineKeyboardMarkup()
