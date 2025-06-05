@@ -74,8 +74,7 @@ def handle_buttons(message):
         return
 
     if message.text == "ثبت آگهی":
-        user_data[message.from_user.id] = {'user_id': message.from_user.id, 'username': message.from_user.username}
-        bot.send_message(message.chat.id, "لطفاً نام کالکشن خود را وارد کنید:")
+    get_collection(message)
         bot.register_next_step_handler(message, get_collection)
     elif message.text == "مشاهده آگهی‌ها":
         markup = types.InlineKeyboardMarkup()
@@ -99,53 +98,73 @@ def handle_buttons(message):
 # ======= سیستم ثبت آگهی =======
 def get_collection(message):
     if check_back(message): return
-    user_data[message.chat.id]['collection'] = message.text
-    bot.send_message(message.chat.id, "لطفاً اسکین‌های مهم اکانت را وارد کنید:")
-    bot.register_next_step_handler(message, get_key_skins)
+    user_data[message.chat.id] = {
+        'user_id': message.chat.id,
+        'username': message.from_user.username
+    }
 
-def get_key_skins(message):
-    if check_back(message): return
-    user_data[message.chat.id]['key_skins'] = message.text
-    bot.send_message(message.chat.id, "توضیحات کامل اکانت را وارد کنید:")
-    bot.register_next_step_handler(message, get_description)
+    form_text = (
+    "طبق فرم بترتیب تایپ و اسکیناتون رو پر کنید (کپی کنید و فرم رو پر کنید و چیزی که ندارید رو کلا حذف کنید از لیست)\n\n"
+    "```\n"
+    "کالکشن:\n\n"
+    "لجند:\n\n"
+    "ناروتو:\n"
+    "کوف:\n"
+    "جوجوتسو:\n"
+    "هانترهانتر:\n"
+    "اسپیرانت:\n"
+    "ترنسفورمر:\n"
+    "استاروارز:\n"
+    "جنگیر:\n"
+    "اتک ان تایتان:\n"
+    "نئوبیست:\n"
+    "دوکاتی:\n\n"
+    "کالکتور:\n"
+    "لاکی باکس:\n"
+    "استار سالانه:\n"
+    "زودیاک:\n\n"
+    "اسکین هایی که تو لیست نیس و توضیح مختصر درباره اکانت:\n\n"
+    "قیمت:\n"
+    "```"
+    )
 
-def get_description(message):
-    if check_back(message): return
-    user_data[message.chat.id]['description'] = message.text
-    bot.send_message(message.chat.id, "قیمت مورد نظر برای فروش اکانت را وارد کنید:")
-    bot.register_next_step_handler(message, get_price)
+    # ارسال فرم و دکمه
+    bot.send_message(message.chat.id, form_text, parse_mode="Markdown")
+    bot.send_message(message.chat.id, "⬆️ فرم بالا رو پر کن و بفرست", reply_markup=markup)
 
-def get_price(message):
-    if check_back(message): return
-    user_data[message.chat.id]['price'] = message.text
-    bot.send_message(message.chat.id, "لطفاً یک ویدئو از اکانت خود ارسال کنید:")
-    bot.register_next_step_handler(message, get_video)
-
+    # رفتن به مرحله دریافت فرم
+    bot.register_next_step_handler(message, get_form_text)
 def get_video(message):
     if check_back(message): return
     if message.content_type != 'video':
         bot.send_message(message.chat.id, "❌ لطفاً فقط یک ویدئو ارسال کنید:")
         bot.register_next_step_handler(message, get_video)
         return
+
     user_data[message.chat.id]['video'] = message.video.file_id
+
+    # ✅ ارسال پیام به کاربر که آگهی ثبت شد
+    bot.send_message(message.chat.id, "✅ آگهی شما دریافت شد و برای بررسی به ادمین ارسال می‌شود.")
+
+    # ✅ فرستادن آگهی برای ادمین
     send_to_admin(message.chat.id)
 
 def send_to_admin(user_id):
     data = user_data[user_id]
-    caption = f"📢 آگهی جدید برای بررسی:\n\n" \
-              f"🧩 کالکشن: {data['collection']}\n" \
-              f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
-              f"📝 توضیحات: {data['description']}\n" \
-              f"💰 قیمت: {data['price']} تومان\n\n" \
-              f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
+
+    caption = (
+        "📢 آگهی جدید برای بررسی:\n\n"
+        f"{data['info_text']}\n\n"
+        f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
+    )
 
     markup = types.InlineKeyboardMarkup()
-    approve_button = types.InlineKeyboardButton("✅ تأیید آگهی (وارد کردن کد)", callback_data=f"approve_{user_id}")
-    reject_button = types.InlineKeyboardButton("❌ رد آگهی (نوشتن دلیل)", callback_data=f"reject_{user_id}")
-    markup.add(approve_button, reject_button)
+    approve_btn = types.InlineKeyboardButton("✅ تایید", callback_data=f"approve_{user_id}")
+    reject_btn = types.InlineKeyboardButton("❌ رد", callback_data=f"reject_{user_id}")
+    markup.add(approve_btn, reject_btn)
 
     bot.send_video(ADMIN_ID, data['video'], caption=caption, reply_markup=markup)
-    bot.send_message(user_id, "آگهی شما برای بررسی به ادمین ارسال شد.\nپس از تأیید، در کانال منتشر خواهد شد.")
+    bot.send_message(user_id, "✅ آگهی شما ثبت شد و برای بررسی به ادمین ارسال گردید.")
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('approve_') or call.data.startswith('reject_'))
 def handle_admin_response(call):
