@@ -186,7 +186,7 @@ def calculate_price(message):
     text = message.text.strip()
 
     if text == "قیمت نهایی":
-    user_skins = user_data.get(message.chat.id, {})
+     user_skins = user_data.get(message.chat.id, {})
 
     print("📊 بررسی user_data:", message.chat.id, user_skins)  # برای لاگ گرفتن
 
