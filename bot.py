@@ -186,51 +186,58 @@ def calculate_price(message):
     text = message.text.strip()
 
     if text == "قیمت نهایی":
-        user_skins = user_data.get(message.chat.id, {})
-        
-        if not user_skins:
-            bot.send_message(message.chat.id, "❌ هنوز هیچ اسکینی ثبت نشده است.")
-            send_skin_selection_menu(message.chat.id)
-            return
+    user_skins = user_data.get(message.chat.id, {})
 
-        fixed_prices = {
-            "Supreme": 1200000,
-            "Grand": 500000,
-            "Exquisite": 300000
-        }
+    print("📊 بررسی user_data:", message.chat.id, user_skins)  # برای لاگ گرفتن
 
-        total_price = 0
-        summary_lines = []
-        valid_data_found = False
-
-        for skin_type, count in user_skins.items():
-            if count is None:
-                continue
-            valid_data_found = True
-
-            if skin_type in fixed_prices:
-                price = fixed_prices[skin_type] * count
-            else:  # Deluxe
-                if count < 20:
-                    price = 25000 * count
-                elif 20 <= count <= 39:
-                    price = 500000
-                else:
-                    price = 700000
-            total_price += price
-            summary_lines.append(f"💰 {skin_type}: {count} عدد")
-
-        if not valid_data_found:
-            bot.send_message(message.chat.id, "❌ هنوز هیچ تعداد معتبری ثبت نشده. لطفاً تعداد اسکین‌ها را به‌درستی وارد کنید.")
-            send_skin_selection_menu(message.chat.id)
-            return
-
-        final_message = "💵 قیمت نهایی کل اسکین‌ها:\n\n" + "\n".join(summary_lines) + \
-                        f"\n\n💰 جمع کل: {total_price:,} تومان\n\n💡 قیمت بالا ارزش اکانت شماست\nبرای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید."
-        bot.send_message(message.chat.id, final_message)
-        user_data.pop(message.chat.id, None)
-        send_menu(message.chat.id)
+    if not user_skins:
+        bot.send_message(message.chat.id, "❌ هنوز هیچ اسکینی ثبت نشده است.")
+        send_skin_selection_menu(message.chat.id)
         return
+
+    fixed_prices = {
+        "Supreme": 1200000,
+        "Grand": 500000,
+        "Exquisite": 300000
+    }
+
+    total_price = 0
+    summary_lines = []
+    valid_data_found = False
+
+    for skin_type, count in user_skins.items():
+        if count is None:
+            continue
+        valid_data_found = True
+
+        if skin_type in fixed_prices:
+            price = fixed_prices[skin_type] * count
+        else:  # Deluxe
+            if count < 20:
+                price = 25000 * count
+            elif 20 <= count <= 39:
+                price = 500000
+            else:
+                price = 700000
+
+        total_price += price
+        summary_lines.append(f"💰 {skin_type}: {count} عدد")
+
+    print("✅ مجموع قیمت:", total_price)
+    print("✅ اسکین‌ها:", summary_lines)
+
+    if not valid_data_found or not summary_lines:
+        bot.send_message(message.chat.id, "❌ هنوز هیچ تعداد معتبری وارد نشده. لطفاً دوباره امتحان کن.")
+        send_skin_selection_menu(message.chat.id)
+        return
+
+    final_message = "💵 قیمت نهایی کل اسکین‌ها:\n\n" + "\n".join(summary_lines) + \
+                    f"\n\n💰 جمع کل: {total_price:,} تومان\n\n💡 قیمت بالا ارزش اکانت شماست\nبرای ثبت آگهی تو کانال، قیمت فروش رو خودتون تعیین می‌کنید."
+
+    bot.send_message(message.chat.id, final_message)
+    user_data.pop(message.chat.id, None)
+    send_menu(message.chat.id)
+    return
 
     valid_skin_types = ["Supreme", "Grand", "Exquisite", "Deluxe"]
     if text in valid_skin_types:
