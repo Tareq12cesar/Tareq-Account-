@@ -132,8 +132,9 @@ def get_collection(message):
     bot.send_message(message.chat.id, form_text, parse_mode="Markdown")
     bot.send_message(message.chat.id, "⬆️ فرم بالا رو پر کن و بفرست", reply_markup=markup)
 
-    # رفتن به مرحله دریافت فرم
     bot.register_next_step_handler(message, get_form_text)
+bot.send_message(message.chat.id, "لطفاً یک ویدئو از اکانت خود ارسال کنید:")
+bot.register_next_step_handler(message, get_video)
 
 def get_form_text(message):
     if check_back(message): return
