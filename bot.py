@@ -4,7 +4,7 @@ from flask import Flask, request
 import threading
 
 # ======= تنظیمات اولیه =======
-BOT_TOKEN = '7963209844:AAEHv6KJxOmO15kLhNJ2IFA9cF_ySATocCo'
+BOT_TOKEN = '7933020801:AAEqdF6BgqKita4mem8Zbh9Az5tQrx06g14'
 ADMIN_ID = 6697070308  # آیدی عددی ادمین
 CHANNEL_USERNAME = '@TareqMlbb'  # یوزرنیم کانال
 CHANNEL_LINK = 'https://t.me/TareqMlbb'
@@ -420,11 +420,9 @@ def handle_admin_text(message):
 
         if req_type == 'ad':
             caption = f"📢 آگهی تأیید شده:\n\n" \
-                      f"🧩 کالکشن: {data['collection']}\n" \
-                      f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
-                      f"📝 توضیحات: {data['description']}\n" \
-                      f"💰 قیمت: {data['price']} تومان\n" \
-                      f"🆔 کد آگهی: {code}"
+                      f"{data['info_text']}\n\n"
+        f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
+    )
 
             markup = types.InlineKeyboardMarkup()
             btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
@@ -460,7 +458,19 @@ bot.send_message(
     reply_markup=markup
 )
     
- elif ADMIN_ID in pending_rejections:
+ @bot.message_handler(func=lambda m: m.chat.id == ADMIN_ID)
+def handle_admin_code(message):
+    code = message.text.strip()
+    user_id = pending_codes[message.chat.id]['user_id']
+    del pending_codes[message.chat.id]
+
+    data = user_data[user_id]
+    caption = f"📢 آگهی تایید شده:\n\n{data['info_text']}\nکد آگهی: {code}"
+    bot.send_video(CHANNEL_ID, data['video'], caption=caption)
+    bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\nکد آگهی: {code}\nاین پیام رو برای ادمین بفرستید")
+
+    # 🔻 اینجا اضافه کن:
+    elif ADMIN_ID in pending_rejections:
         reason = message.text.strip()
         pending = pending_rejections.pop(ADMIN_ID)
         user_id = pending['user_id']
@@ -470,7 +480,6 @@ bot.send_message(
             bot.send_message(user_id, f"❌ آگهی شما رد شد.\nدلیل: {reason}")
         elif req_type == 'buy':
             bot.send_message(user_id, f"❌ درخواست خرید شما رد شد.\nدلیل: {reason}")
-
 # ======= اجرای ربات با Flask =======
 
 @bot.callback_query_handler(func=lambda call: call.data == "check_join")
