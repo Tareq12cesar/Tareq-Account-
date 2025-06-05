@@ -152,7 +152,7 @@ def get_video(message):
     user_data[message.chat.id]['video'] = message.video.file_id
 
     # ✅ ارسال پیام به کاربر که آگهی ثبت شد
-    bot.send_message(message.chat.id, "✅ آگهی شما دریافت شد و برای بررسی به ادمین ارسال می‌شود.")
+    bot.send_message(message.chat.id, "✅ آگهی شما دریافت شد و برای بررسی به ادمین ارسال شد.")
 
     # ✅ فرستادن آگهی برای ادمین
     send_to_admin(message.chat.id)
@@ -172,7 +172,6 @@ def send_to_admin(user_id):
     markup.add(approve_btn, reject_btn)
 
     bot.send_video(ADMIN_ID, data['video'], caption=caption, reply_markup=markup)
-    bot.send_message(user_id, "✅ آگهی شما ثبت شد و برای بررسی به ادمین ارسال گردید.")
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('approve_') or call.data.startswith('reject_'))
 def handle_admin_response(call):
@@ -194,6 +193,30 @@ def handle_admin_response(call):
         bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد آگهی را بنویسید:")
         pending_rejections[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+        
+@bot.message_handler(func=lambda m: m.chat.id == ADMIN_ID and m.chat.id in pending_codes)
+def handle_admin_code(message):
+    code = message.text.strip()
+    user_id = pending_codes[message.chat.id]['user_id']
+    del pending_codes[message.chat.id]
+
+    data = user_data[user_id]
+    caption = f"📢 آگهی تایید شده:\n\n{data['info_text']}\n\n🆔 کد تأیید: {code}"
+    bot.send_video(CHANNEL_ID, data['video'], caption=caption)
+
+# دکمه برای چت با ادمین
+markup = types.InlineKeyboardMarkup()
+btn = types.InlineKeyboardButton("📤 ارسال به ادمین", url="https://t.me/Tareq_Cesar_Trade")  # ← آیدی ادمین
+markup.add(btn)
+
+# پیام متنی برای کاربر
+bot.send_message(
+    user_id,
+    f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n"
+    f"کد آگهی: {code}\n\n"
+    "این پیام رو برای ادمین بفرستید",
+    reply_markup=markup
+)
 
 # ======= قیمت‌یاب اکانت =======
 from telebot import types
@@ -423,9 +446,19 @@ def handle_admin_text(message):
             markup.add(btn)
             
             bot.send_message(CHANNEL_USERNAME, caption, reply_markup=markup)
-            bot.send_message(user_id, f"✅ درخواست خرید شما تأیید و در کانال منتشر شد.\n\n"
-                          f"کد درخواست: {code}\n\n"
-                          f"این پیام رو برای ادمین بفرستید")
+            # دکمه ارتباط با ادمین
+markup = types.InlineKeyboardMarkup()
+btn = types.InlineKeyboardButton("📤 ارسال به ادمین", url="https://t.me/Tareq_Cesar_Trade")
+markup.add(btn)
+
+# پیام نهایی به کاربر بعد از تایید درخواست خرید
+bot.send_message(
+    user_id,
+    f"✅ درخواست شما تأیید و در کانال منتشر شد.\n\n"
+    f"کد درخواست: {code}\n\n"
+    "این پیام رو برای ادمین بفرستید",
+    reply_markup=markup
+)
     
     elif ADMIN_ID in pending_rejections:
         reason = message.text.strip()
