@@ -4,7 +4,7 @@ from flask import Flask, request
 import threading
 
 # ======= تنظیمات اولیه =======
-BOT_TOKEN = '7933020801:AAEqdF6BgqKita4mem8Zbh9Az5tQrx06g14'
+BOT_TOKEN = '7963209844:AAEHv6KJxOmO15kLhNJ2IFA9cF_ySATocCo'
 ADMIN_ID = 6697070308  # آیدی عددی ادمین
 CHANNEL_USERNAME = '@TareqMlbb'  # یوزرنیم کانال
 CHANNEL_LINK = 'https://t.me/TareqMlbb'
@@ -99,55 +99,27 @@ def handle_buttons(message):
 # ======= سیستم ثبت آگهی =======
 def get_collection(message):
     if check_back(message): return
-    user_data[message.chat.id] = {
-        'user_id': message.chat.id,
-        'username': message.from_user.username
-    }
+    user_data[message.chat.id]['collection'] = message.text
+    bot.send_message(message.chat.id, "لطفاً اسکین‌های مهم اکانت را وارد کنید:")
+    bot.register_next_step_handler(message, get_key_skins)
 
-    form_text = (
-    "طبق فرم بترتیب تایپ و اسکیناتون رو پر کنید (کپی کنید و فرم رو پر کنید و چیزی که ندارید رو کلا حذف کنید از لیست)\n\n"
-    "```\n"
-    "کالکشن:\n\n"
-
-    "لجند:\n\n"
-
-    "ناروتو:\n"
-    "کوف:\n"
-    "جوجوتسو:\n"
-    "هانترهانتر:\n"
-    "اسپیرانت:\n"
-    "ترنسفورمر:\n"
-    "استاروارز:\n"
-    "جنگیر:\n"
-    "اتک ان تایتان:\n"
-    "نئوبیست:\n"
-    "دوکاتی:\n\n"
-
-    "کالکتور:\n"
-    "لاکی باکس:\n"
-    "استار سالانه:\n"
-    "زودیاک:\n\n"
-
-    "اسکین هایی که تو لیست نیس و توضیح مختصر درباره اکانت:\n\n"
-
-    "قیمت:\n"
-    "```"
-    )
-
-
-    # ارسال فرم و دکمه
-    bot.send_message(message.chat.id, form_text, parse_mode="Markdown")
-    
-    # رفتن به مرحله دریافت فرم
-    bot.register_next_step_handler(message, get_form_text) 
-    
-def get_form_text(message):
+def get_key_skins(message):
     if check_back(message): return
-    user_data[message.chat.id]['info_text'] = message.text
+    user_data[message.chat.id]['key_skins'] = message.text
+    bot.send_message(message.chat.id, "توضیحات کامل اکانت را وارد کنید:")
+    bot.register_next_step_handler(message, get_description)
 
-    bot.send_message(message.chat.id, "📹 لطفاً یک ویدئو از اکانت خود ارسال کنید:")
+def get_description(message):
+    if check_back(message): return
+    user_data[message.chat.id]['description'] = message.text
+    bot.send_message(message.chat.id, "قیمت مورد نظر برای فروش اکانت را وارد کنید:")
+    bot.register_next_step_handler(message, get_price)
+
+def get_price(message):
+    if check_back(message): return
+    user_data[message.chat.id]['price'] = message.text
+    bot.send_message(message.chat.id, "لطفاً یک ویدئو از اکانت خود ارسال کنید:")
     bot.register_next_step_handler(message, get_video)
-
 
 def get_video(message):
     if check_back(message): return
@@ -155,30 +127,25 @@ def get_video(message):
         bot.send_message(message.chat.id, "❌ لطفاً فقط یک ویدئو ارسال کنید:")
         bot.register_next_step_handler(message, get_video)
         return
-
     user_data[message.chat.id]['video'] = message.video.file_id
-
-    # ✅ ارسال پیام به کاربر که آگهی ثبت شد
-    bot.send_message(message.chat.id, "✅ آگهی شما دریافت شد و برای بررسی به ادمین ارسال شد.")
-
-    # ✅ فرستادن آگهی برای ادمین
     send_to_admin(message.chat.id)
 
 def send_to_admin(user_id):
     data = user_data[user_id]
-
-    caption = (
-        "📢 آگهی جدید برای بررسی:\n\n"
-        f"{data['info_text']}\n\n"
-        f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
-    )
+    caption = f"📢 آگهی جدید برای بررسی:\n\n" \
+              f"🧩 کالکشن: {data['collection']}\n" \
+              f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
+              f"📝 توضیحات: {data['description']}\n" \
+              f"💰 قیمت: {data['price']} تومان\n\n" \
+              f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
 
     markup = types.InlineKeyboardMarkup()
-    approve_btn = types.InlineKeyboardButton("✅  تایید و کد", callback_data=f"approve_{user_id}")
-    reject_btn = types.InlineKeyboardButton("❌ رد و دلیل", callback_data=f"reject_{user_id}")
-    markup.add(approve_btn, reject_btn)
+    approve_button = types.InlineKeyboardButton("✅ تأیید آگهی (وارد کردن کد)", callback_data=f"approve_{user_id}")
+    reject_button = types.InlineKeyboardButton("❌ رد آگهی (نوشتن دلیل)", callback_data=f"reject_{user_id}")
+    markup.add(approve_button, reject_button)
 
     bot.send_video(ADMIN_ID, data['video'], caption=caption, reply_markup=markup)
+    bot.send_message(user_id, "آگهی شما برای بررسی به ادمین ارسال شد.\nپس از تأیید، در کانال منتشر خواهد شد.")
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('approve_') or call.data.startswith('reject_'))
 def handle_admin_response(call):
@@ -200,30 +167,6 @@ def handle_admin_response(call):
         bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد آگهی را بنویسید:")
         pending_rejections[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-        
-@bot.message_handler(func=lambda m: m.chat.id == ADMIN_ID and m.chat.id in pending_codes)
-def handle_admin_code(message):
-    code = message.text.strip()
-    user_id = pending_codes[message.chat.id]['user_id']
-    del pending_codes[message.chat.id]
-
-    data = user_data[user_id]
-    caption = f"📢 آگهی تایید شده:\n\n{data['info_text']}\n\n🆔 کد تأیید: {code}"
-    bot.send_video(CHANNEL_ID, data['video'], caption=caption)
-
-# دکمه برای چت با ادمین
-markup = types.InlineKeyboardMarkup()
-btn = types.InlineKeyboardButton("📤 ارسال به ادمین", url="https://t.me/Tareq_Cesar_Trade")  # ← آیدی ادمین
-markup.add(btn)
-
-# پیام متنی برای کاربر
-bot.send_message(
-    user_id,
-    f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n"
-    f"کد آگهی: {code}\n\n"
-    "این پیام رو برای ادمین بفرستید",
-    reply_markup=markup
-)
 
 # ======= قیمت‌یاب اکانت =======
 from telebot import types
