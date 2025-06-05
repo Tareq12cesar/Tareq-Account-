@@ -74,9 +74,7 @@ def handle_buttons(message):
         return
 
     if message.text == "ثبت آگهی":
-        user_data[message.from_user.id] = {'user_id': message.from_user.id, 'username': message.from_user.username}
-        bot.send_message(message.chat.id, "لطفاً نام کالکشن خود را وارد کنید:")
-        bot.register_next_step_handler(message, get_collection)
+    get_collection(message)
     elif message.text == "مشاهده آگهی‌ها":
         markup = types.InlineKeyboardMarkup()
         channel_button = types.InlineKeyboardButton("🔗 رفتن به کانال آگهی‌ها", url=CHANNEL_LINK)
@@ -144,6 +142,14 @@ def get_collection(message):
     bot.register_next_step_handler(message, get_form_text) 
     bot.send_message(message.chat.id, "لطفاً یک ویدئو از اکانت خود ارسال کنید:")
     bot.register_next_step_handler(message, get_video)
+
+def get_form_text(message):
+    if check_back(message): return
+    user_data[message.chat.id]['info_text'] = message.text
+
+    bot.send_message(message.chat.id, "📹 لطفاً یک ویدئو از اکانت خود ارسال کنید:")
+    bot.register_next_step_handler(message, get_video)
+
 
 def get_video(message):
     if check_back(message): return
