@@ -140,9 +140,7 @@ def get_collection(message):
     bot.send_message(message.chat.id, "⬆️ فرم بالا رو پر کن و بفرست", reply_markup=markup)
 
     bot.register_next_step_handler(message, get_form_text) 
-    bot.send_message(message.chat.id, "لطفاً یک ویدئو از اکانت خود ارسال کنید:")
-    bot.register_next_step_handler(message, get_video)
-
+    
 def get_form_text(message):
     if check_back(message): return
     user_data[message.chat.id]['info_text'] = message.text
@@ -157,7 +155,13 @@ def get_video(message):
         bot.send_message(message.chat.id, "❌ لطفاً فقط یک ویدئو ارسال کنید:")
         bot.register_next_step_handler(message, get_video)
         return
+
     user_data[message.chat.id]['video'] = message.video.file_id
+
+    # ✅ ارسال پیام به کاربر که آگهی ثبت شد
+    bot.send_message(message.chat.id, "✅ آگهی شما دریافت شد و برای بررسی به ادمین ارسال می‌شود.")
+
+    # ✅ فرستادن آگهی برای ادمین
     send_to_admin(message.chat.id)
 
 def send_to_admin(user_id):
