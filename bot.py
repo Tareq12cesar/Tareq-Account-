@@ -422,7 +422,6 @@ def handle_admin_text(message):
             caption = f"📢 آگهی تأیید شده:\n\n" \
                       f"{data['info_text']}\n\n"
         f"👤 ارسال‌کننده: @{data['username'] or 'نامشخص'}"
-    )
 
             markup = types.InlineKeyboardMarkup()
             btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
