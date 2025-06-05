@@ -460,7 +460,7 @@ bot.send_message(
     reply_markup=markup
 )
     
-    elif ADMIN_ID in pending_rejections:
+ elif ADMIN_ID in pending_rejections:
         reason = message.text.strip()
         pending = pending_rejections.pop(ADMIN_ID)
         user_id = pending['user_id']
