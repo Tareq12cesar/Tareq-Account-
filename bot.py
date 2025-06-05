@@ -240,10 +240,6 @@ def calculate_price(message):
     send_skin_selection_menu(message.chat.id)
 
 def get_skin_count(message, skin_type):
-    if message.text.strip() == "بازگشت":
-        send_menu(message.chat.id)  # برگرد به منوی اصلی
-        return
-
     try:
         count = int(message.text.strip())
         if count < 0:
