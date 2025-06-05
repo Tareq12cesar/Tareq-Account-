@@ -134,23 +134,11 @@ def get_collection(message):
     bot.register_next_step_handler(message, get_form_text)
     
 def get_form_text(message):
-    if check_back(message):
-        return
-
-    if message.content_type != 'text':
-        bot.send_message(message.chat.id, "❌ لطفاً فرم را به‌صورت متن ارسال کنید.")
-        bot.register_next_step_handler(message, get_form_text)
-        return
-
-    if message.chat.id not in user_data:
-        user_data[message.chat.id] = {}
-
+    if check_back(message): return
     user_data[message.chat.id]['info_text'] = message.text
 
-    # فقط یک بار مرحله‌ی بعد را ثبت کن
-    bot.send_message(message.chat.id, "📁 لطفاً یک ویدئو از اکانت خود ارسال کنید:")
+    bot.send_message(message.chat.id, "📹 لطفاً یک ویدئو از اکانت خود ارسال کنید:")
     bot.register_next_step_handler(message, get_video)
-
 
 def get_video(message):
     if check_back(message): return
