@@ -403,8 +403,6 @@ def handle_buy_request_response(call):
         }
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
         
-
-
 @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
 def handle_admin_text(message):
     if ADMIN_ID in pending_codes:
@@ -418,49 +416,40 @@ def handle_admin_text(message):
             bot.send_message(ADMIN_ID, "❌ اطلاعات کاربر یافت نشد.")
             return
 
+        # آگهی فروش
         if req_type == 'ad':
-    caption = (
-        "📢 آگهی تأیید شده:\n\n"
-        f"{data['info_text']}\n\n"
-        f"🆔 کد آگهی: {code}"
-    )
-
-    markup = types.InlineKeyboardMarkup()
-    btn =
-            btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+            caption = (
+                "📢 آگهی تأیید شده:\n\n"
+                f"{data['info_text']}\n\n"
+                f"🆔 کد آگهی: {code}"
+            )
+            markup = types.InlineKeyboardMarkup()
+            btn = types.InlineKeyboardButton("📩 ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
             markup.add(btn)
 
             bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
+
             bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n"
-                          f"کد آگهی: {code}\n\n"
-                          f"این پیام رو برای ادمین بفرستید")
-            
-        if req_type == 'buy':
-    caption = (
-        "🛒 درخواست خرید تأیید شده:\n\n"
-        f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n"
-        f"💰 بودجه: {data['max_budget']} تومان\n"
-        f"🆔 کد درخواست: {code}"
-    )
+                                      f"کد آگهی: {code}\n\n"
+                                      f"این پیام رو برای ادمین بفرستید", reply_markup=markup)
 
-    markup = types.InlineKeyboardMarkup()
-            btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+        # درخواست خرید
+        elif req_type == 'buy':
+            caption = (
+                "🛒 درخواست خرید تأیید شده:\n\n"
+                f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n"
+                f"💰 بودجه: {data['max_budget']} تومان\n"
+                f"🆔 کد درخواست: {code}"
+            )
+            markup = types.InlineKeyboardMarkup()
+            btn = types.InlineKeyboardButton("📩 ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
             markup.add(btn)
-            
-            bot.send_message(CHANNEL_USERNAME, caption, reply_markup=markup)
-            # دکمه ارتباط با ادمین
-markup = types.InlineKeyboardMarkup()
-btn = types.InlineKeyboardButton("📤 ارسال به ادمین", url="https://t.me/Tareq_Cesar_Trade")
-markup.add(btn)
 
-# پیام نهایی به کاربر بعد از تایید درخواست خرید
-bot.send_message(
-    user_id,
-    f"✅ درخواست شما تأیید و در کانال منتشر شد.\n\n"
-    f"کد درخواست: {code}\n\n"
-    "این پیام رو برای ادمین بفرستید",
-    reply_markup=markup
-)
+            bot.send_message(CHANNEL_USERNAME, caption, reply_markup=markup)
+
+            bot.send_message(user_id, f"✅ درخواست شما تأیید و در کانال منتشر شد.\n\n"
+                                      f"کد درخواست: {code}\n\n"
+                                      f"این پیام رو برای ادمین بفرستید", reply_markup=markup)
     
  @bot.message_handler(func=lambda m: m.chat.id == ADMIN_ID)
 def handle_admin_code(message):
