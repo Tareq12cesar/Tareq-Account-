@@ -166,13 +166,12 @@ def send_to_admin(user_id):
     )
 
     markup = types.InlineKeyboardMarkup()
-    approve_btn = types.InlineKeyboardButton("✅ تایید", callback_data=f"approve_{user_id}")
-    reject_btn = types.InlineKeyboardButton("❌ رد", callback_data=f"reject_{user_id}")
+    approve_btn = types.InlineKeyboardButton("✅  تایید و کد", callback_data=f"approve_{user_id}")
+    reject_btn = types.InlineKeyboardButton("❌ رد و دلیل", callback_data=f"reject_{user_id}")
     markup.add(approve_btn, reject_btn)
 
     bot.send_video(ADMIN_ID, data['video'], caption=caption, reply_markup=markup)
-    bot.send_message(user_id, "✅ آگهی شما ثبت شد و برای بررسی به ادمین ارسال گردید.")
-
+    
 @bot.callback_query_handler(func=lambda call: call.data.startswith('approve_') or call.data.startswith('reject_'))
 def handle_admin_response(call):
     parts = call.data.split('_')
