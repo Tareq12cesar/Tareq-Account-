@@ -113,7 +113,7 @@ def get_collection(message):
     "جوجوتسو:\n"
     "هانترهانتر:\n"
     "اسپیرانت:\n"
-    "ترنسفورمر:\n"
+    "ترنسفورمرز:\n"
     "استاروارز:\n"
     "جنگیر:\n"
     "اتک ان تایتان:\n"
@@ -135,17 +135,19 @@ def get_collection(message):
     bot.register_next_step_handler(message, get_form_text)
 
 def get_form_text(message):
-    if check_back(message): return
+    if check_back(message):
+        return
 
-    # ایمن‌سازی دیکشنری
+    # اطمینان از مقداردهی user_data
     if message.chat.id not in user_data:
         user_data[message.chat.id] = {}
 
     user_data[message.chat.id]['info_text'] = message.text
 
-    # حالا بعد از گرفتن متن فرم، برو مرحله ویدیو
+    # رفتن به مرحله ارسال ویدیو
     bot.send_message(message.chat.id, "📁 لطفاً یک ویدئو از اکانت خود ارسال کنید:")
     bot.register_next_step_handler(message, get_video)
+    
 def get_video(message):
     if check_back(message): return
     if message.content_type != 'video':
