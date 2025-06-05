@@ -132,8 +132,8 @@ def get_collection(message):
     bot.send_message(message.chat.id, form_text, parse_mode="Markdown")
     bot.send_message(message.chat.id, "⬆️ فرم بالا رو پر کن و بفرست", reply_markup=markup)
 
-    bot.register_next_step_handler_by_chat_id(message.chat.id, get_form_text)
-
+    # رفتن به مرحله دریافت فرم
+    bot.register_next_step_handler(message, get_form_text) 
 def get_form_text(message):
     if check_back(message):
         return
