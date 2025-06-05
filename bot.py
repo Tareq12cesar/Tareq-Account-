@@ -99,25 +99,49 @@ def handle_buttons(message):
 # ======= سیستم ثبت آگهی =======
 def get_collection(message):
     if check_back(message): return
-    user_data[message.chat.id]['collection'] = message.text
-    bot.send_message(message.chat.id, "لطفاً اسکین‌های مهم اکانت را وارد کنید:")
-    bot.register_next_step_handler(message, get_key_skins)
+    user_data[message.chat.id] = {'user_id': message.chat.id, 'username': message.from_user.username}
 
-def get_key_skins(message):
-    if check_back(message): return
-    user_data[message.chat.id]['key_skins'] = message.text
-    bot.send_message(message.chat.id, "توضیحات کامل اکانت را وارد کنید:")
-    bot.register_next_step_handler(message, get_description)
+    raw_form_text = (
+        "کالکشن:\n\n"
+        "------------------\n"
+        "لجند\n\n"
+        "------------------\n"
+        "ناروتو:\n"
+        "کوف:\n"
+        "جوجوتسو:\n"
+        "هانترهانتر:\n"
+        "اسپیرانت:\n"
+        "ترنسفورمر:\n"
+        "استاروارز:\n"
+        "جنگیر:\n"
+        "اتک ان تایتان:\n"
+        "نئوبیست:\n"
+        "دوکاتی:\n\n"
+        "------------------\n"
+        "کالکتور:\n"
+        "لاکی باکس:\n"
+        "استار سالانه:\n"
+        "کلادز:\n\n"
+        "------------------\n"
+        "اسکین هایی که تو لیست نیس و توضیح مختصر درباره اکانت:\n\n"
+        "------------------\n"
+        "قیمت:"
+    )
 
-def get_description(message):
-    if check_back(message): return
-    user_data[message.chat.id]['description'] = message.text
-    bot.send_message(message.chat.id, "قیمت مورد نظر برای فروش اکانت را وارد کنید:")
-    bot.register_next_step_handler(message, get_price)
+    # دکمه کپی فرم
+    markup = types.InlineKeyboardMarkup()
+    copy_btn = types.InlineKeyboardButton("📋 کپی فرم برای پر کردن", switch_inline_query=raw_form_text)
+    markup.add(copy_btn)
 
-def get_price(message):
-    if check_back(message): return
-    user_data[message.chat.id]['price'] = message.text
+    # ارسال توضیح + فرم + دکمه
+    bot.send_message(
+        message.chat.id,
+        "طبق فرم بترتیب تایپ و اسکیناتون رو پر کنید (کپی کنید و فرم رو پر کنید و چیزی که ندارید رو کلا حذف کنید از لیست)"
+    )
+    bot.send_message(message.chat.id, raw_form_text)
+    bot.send_message(message.chat.id, "⬆️ فرم بالا رو پر کن و بفرست", reply_markup=markup)
+
+    bot.register_next_step_handler(message, get_form_text) 
     bot.send_message(message.chat.id, "لطفاً یک ویدئو از اکانت خود ارسال کنید:")
     bot.register_next_step_handler(message, get_video)
 
