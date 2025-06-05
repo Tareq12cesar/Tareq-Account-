@@ -130,8 +130,7 @@ def get_collection(message):
 
     # ارسال فرم و دکمه
     bot.send_message(message.chat.id, form_text, parse_mode="Markdown")
-    bot.send_message(message.chat.id, "⬆️ فرم بالا رو پر کن و بفرست", reply_markup=markup)
-
+    
     # رفتن به مرحله دریافت فرم
     bot.register_next_step_handler(message, get_form_text) 
     
