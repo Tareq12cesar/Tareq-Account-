@@ -74,7 +74,7 @@ def handle_buttons(message):
         return
 
     if message.text == "ثبت آگهی":
-    get_collection(message)
+        get_collection(message)
     elif message.text == "مشاهده آگهی‌ها":
         markup = types.InlineKeyboardMarkup()
         channel_button = types.InlineKeyboardButton("🔗 رفتن به کانال آگهی‌ها", url=CHANNEL_LINK)
