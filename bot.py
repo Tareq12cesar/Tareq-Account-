@@ -392,7 +392,7 @@ def handle_admin_text(message):
             return
 
         if req_type == 'ad':
-    caption = f"📢 آگهی تأیید شده:\n\n" \
+            caption = f"📢 آگهی تأیید شده:\n\n" \
               f"{data['info_text']}\n\n" \
               f"🆔 کد آگهی: {code}"
 
