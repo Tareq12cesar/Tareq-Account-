@@ -409,7 +409,7 @@ def handle_admin_text(message):
 
 
     # ادامه‌ی بخش مربوط به درخواست خرید
-        elif req_type == 'buy':
+         elif req_type == 'buy':
             caption = f"🛒 درخواست خرید تایید شده:\n\n" \
                       f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
                       f"💰 بودجه: {data['max_budget']}\n" \
