@@ -399,12 +399,12 @@ def handle_admin_text(message):
                       f"🆔 کد آگهی: {code}"
 
             markup = types.InlineKeyboardMarkup()
-            btn = types.InlineKeyboardButton("📞 ارتباط با ادمین", url=ADMIN_CONTACT_LINK)
-            markup.add(btn)
-
-            bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
-            bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\nکد آگهی: {code}\n\nاین پیام رو برای ادمین بفرستید")
-
+    btn = types.InlineKeyboardButton("📞 ارتباط با ادمین", url=ADMIN_CONTACT_LINK)
+    markup.add(btn)
+    
+             bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
+             bot.send_message(user_id, f"✅ آگهی شما تایید و در کانال منتشر شد.\n\nکد آگهی: {code}\n\nاین پیام رو برای ادمین بفرستید")
+    
         elif req_type == 'buy':
             caption = f"🛒 درخواست خرید تایید شده:\n\n" \
                       f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
