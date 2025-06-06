@@ -271,13 +271,13 @@ def get_skin_count(message, skin_type):
         return
 
     try:
-        count = int(message.text.strip())
-        if count < 0:
-            raise ValueError()
-    except Exception:
-        bot.send_message(message.chat.id, "❌ لطفاً فقط عدد مثبت وارد کنید. چندتا اسکین داری؟")
-        bot.register_next_step_handler(message, get_skin_count, skin_type)
-        return
+    count = int(message.text.strip())
+    if count < 0:
+        raise ValueError()
+except Exception:
+    bot.send_message(message.chat.id, "❌ لطفاً فقط عدد مثبت وارد کنید. چندتا اسکین داری؟")
+    send_skin_selection_menu(message.chat.id)
+    return
 
     user_data[message.chat.id][skin_type] = count
 
