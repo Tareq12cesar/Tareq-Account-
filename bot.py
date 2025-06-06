@@ -210,11 +210,10 @@ def calculate_price(message):
     text = message.text.strip()
 
     if text == "قیمت نهایی":
-    user_skin_data = user_data.get(message.chat.id, {})
-    if not isinstance(user_skin_data, dict) or not any(user_skin_data.values()):
-        bot.send_message(message.chat.id, "❌ هنوز هیچ اسکینی ثبت نشده است.")
-        send_skin_selection_menu(message.chat.id)
-        return
+        if message.chat.id not in user_data or not user_data[message.chat.id]:
+            bot.send_message(message.chat.id, "❌ هنوز هیچ اسکینی ثبت نشده است.")
+            send_skin_selection_menu(message.chat.id)
+            return
         
 
         fixed_prices = {
