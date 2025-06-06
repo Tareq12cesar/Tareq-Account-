@@ -399,7 +399,7 @@ def handle_admin_text(message):
             markup.add(btn)
 
             bot.send_message(CHANNEL_USERNAME, caption=caption, reply_markup=markup)
-        bot.send_message(user_id, f"✅ درخواست شما تأیید و در کانال منتشر شد.\n\n"
+            bot.send_message(user_id, f"✅ درخواست شما تأیید و در کانال منتشر شد.\n\n"
                                   f"🆔 کد درخواست: {code}\n\n"
                                   f"این پیام رو برای ادمین بفرستید")
 
