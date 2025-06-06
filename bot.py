@@ -394,26 +394,18 @@ def handle_admin_text(message):
             return
 
         if req_type == 'ad':
-            caption = f"📢 آگهی تأیید شده:\n\n" \
-                      f"{data['info_text']}\n\n" \
-                      f"🆔 کد آگهی: {code}"
+    caption = f"📢 آگهی تأیید شده:\n\n" \
+              f"{data['info_text']}\n\n" \
+              f"🆔 کد آگهی: {code}"
 
-            markup = types.InlineKeyboardMarkup()
-            btn = types.InlineKeyboardButton("📞 ارتباط با ادمین", url=ADMIN_CONTACT_LINK)
-            markup.add(btn)
+    markup = types.InlineKeyboardMarkup()
+    btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+    markup.add(btn)
 
-            # لاگ قبل از ارسال به کانال
-            bot.send_message(ADMIN_ID, f"📤 در حال ارسال به کانال...\nvideo_id: {data.get('video')}\ncaption:\n{caption}")
-
-            # ارسال داخل try-except
-            try:
-                bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
-                bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n🆔 کد آگهی: {code}\n\nاین پیام رو برای ادمین بفرستید")
-            except Exception as e:
-                bot.send_message(ADMIN_ID, f"⛔ خطا در ارسال ویدیو به کانال:\n{e}")
-
-            bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
-            bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n🆔 کد آگهی: {code}\n\nاین پیام رو برای ادمین بفرستید")
+    bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
+    bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n"
+                              f"کد آگهی: {code}\n\n"
+                              f"این پیام رو برای ادمین بفرستید")
 
         elif req_type == 'buy':
             caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
