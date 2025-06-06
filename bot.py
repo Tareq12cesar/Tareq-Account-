@@ -379,6 +379,7 @@ def handle_buy_request_response(call):
 
 
 @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
+
 def handle_admin_text(message):
     if ADMIN_ID in pending_codes:
         code = message.text.strip()
@@ -392,34 +393,25 @@ def handle_admin_text(message):
             return
 
         if req_type == 'ad':
-        caption = f"📢 آگهی تایید شده:\n\n" \
-                  f"{data['info_text']}\n\n" \
-                  f"🆔 کد آگهی: {code}"
-
-        markup = types.InlineKeyboardMarkup()
-        btn = types.InlineKeyboardButton("📞 ارتباط با ادمین", url=ADMIN_CONTACT_LINK)
-        markup.add(btn)
-
-        bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
-        bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\nکد آگهی: {code}\n\nاین پیام رو برای ادمین بفرستید")
-
-    elif req_type == 'buy':
-        caption = f"🛒 درخواست خرید تایید شده:\n\n" \
-                  f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
-                  f"💰 بودجه: {data['max_budget']}\n" \
-                  f"🆔 کد درخواست: {code}"
-
-        bot.send_message(CHANNEL_USERNAME, caption)
-        bot.send_message(user_id, f"✅ درخواست خرید شما تأیید و در کانال منتشر شد.\n\nکد درخواست: {code}\n\nاین پیام رو برای ادمین بفرستید")
+            caption = f"📢 آگهی تایید شده:\n\n" \
+                      f"{data['info_text']}\n\n" \
+                      f"🆔 کد آگهی: {code}"
 
             markup = types.InlineKeyboardMarkup()
-            btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+            btn = types.InlineKeyboardButton("📞 ارتباط با ادمین", url=ADMIN_CONTACT_LINK)
             markup.add(btn)
-            
-            bot.send_message(CHANNEL_USERNAME, caption, reply_markup=markup)
-            bot.send_message(user_id, f"✅ درخواست خرید شما تأیید و در کانال منتشر شد.\n\n"
-                          f"کد درخواست: {code}\n\n"
-                          f"این پیام رو برای ادمین بفرستید")
+
+            bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
+            bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\nکد آگهی: {code}\n\nاین پیام رو برای ادمین بفرستید")
+
+        elif req_type == 'buy':
+            caption = f"🛒 درخواست خرید تایید شده:\n\n" \
+                      f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
+                      f"💰 بودجه: {data['max_budget']}\n" \
+                      f"🆔 کد درخواست: {code}"
+
+            bot.send_message(CHANNEL_USERNAME, caption)
+            bot.send_message(user_id, f"✅ درخواست خرید شما تأیید و در کانال منتشر شد.\n\nکد درخواست: {code}\n\nاین پیام رو برای ادمین بفرستید")
     
     elif ADMIN_ID in pending_rejections:
         reason = message.text.strip()
