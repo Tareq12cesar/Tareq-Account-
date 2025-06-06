@@ -398,10 +398,10 @@ def handle_admin_text(message):
             btn = types.InlineKeyboardButton("📞 ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
             markup.add(btn)
 
-            bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
-            bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n"
-                                      f"کد آگهی: {code}\n\n"
-                                      f"این پیام رو برای ادمین بفرست
+            bot.send_message(CHANNEL_USERNAME, caption=caption, reply_markup=markup)
+        bot.send_message(user_id, f"✅ درخواست شما تأیید و در کانال منتشر شد.\n\n"
+                                  f"🆔 کد درخواست: {code}\n\n"
+                                  f"این پیام رو برای ادمین بفرستید")
 
         elif req_type == 'buy':
              caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
