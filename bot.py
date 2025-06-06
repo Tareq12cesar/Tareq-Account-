@@ -376,7 +376,6 @@ def handle_buy_request_response(call):
 
 
 @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
-
 def handle_admin_text(message):
     if ADMIN_ID in pending_codes:
         code = message.text.strip()
@@ -389,7 +388,7 @@ def handle_admin_text(message):
             bot.send_message(ADMIN_ID, "❌ اطلاعات کاربر یافت نشد.")
             return
 
-    if req_type == 'ad':
+        if req_type == 'ad':
             caption = f"📢 آگهی تأیید شده:\n\n" \
                       f"{data['info_text']}\n\n" \
                       f"🆔 کد آگهی: {code}"
@@ -398,12 +397,12 @@ def handle_admin_text(message):
             btn = types.InlineKeyboardButton("📞 ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
             markup.add(btn)
 
-            bot.send_message(CHANNEL_USERNAME, caption=caption, reply_markup=markup)
-            bot.send_message(user_id, f"✅ درخواست شما تأیید و در کانال منتشر شد.\n\n"
-                                  f"🆔 کد درخواست: {code}\n\n"
-                                  f"این پیام رو برای ادمین بفرستید")
+            bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
+            bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n"
+                                      f"کد آگهی: {code}\n\n"
+                                      f"این پیام رو برای ادمین بفرستید")
 
-   elif req_type == 'buy':
+        elif req_type == 'buy':
             caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
                       f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
                       f"💰 بودجه: {data['max_budget']}\n" \
@@ -417,7 +416,6 @@ def handle_admin_text(message):
             bot.send_message(user_id, f"✅ درخواست خرید شما تأیید و در کانال منتشر شد.\n\n"
                                       f"کد درخواست: {code}\n\n"
                                       f"این پیام رو برای ادمین بفرستید")
-
     elif ADMIN_ID in pending_rejections:
         reason = message.text.strip()
         pending = pending_rejections.pop(ADMIN_ID)
