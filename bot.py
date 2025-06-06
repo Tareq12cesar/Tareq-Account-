@@ -348,16 +348,14 @@ def send_request_to_admin(user_id):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("buyapprove_") or call.data.startswith("buyreject_"))
 def handle_buy_request_response(call):
-    print("👀 admin clicked buyapprove/buyreject")  # برای تست لاگ
-
-    parts = call.data.split('_')
-    action = parts[0]  # buyapprove یا buyreject
-    user_id = int(parts[1])
-
+    user_id = call.from_user.id
     data = user_data.get(user_id)
+
     if not data:
         bot.answer_callback_query(call.id, "❌ اطلاعات درخواست یافت نشد.")
         return
+
+    action = call.data.split("_")[0]  # ✅ این خط بسیار مهمه
 
     if action == 'buyapprove':
         bot.send_message(ADMIN_ID, "✅ لطفاً یک کد دلخواه برای این درخواست وارد کنید:")
@@ -372,11 +370,9 @@ def handle_buy_request_response(call):
         bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد درخواست را بنویسید:")
         pending_rejections[ADMIN_ID] = {
             'user_id': user_id,
-            'message_id': call.message.message_id,
-            'type': 'buy'
+            'message_id': call.message.message_id
         }
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-        
 
 
 @bot.message_handler(func=lambda message: message.chat.id == ADMIN_ID)
