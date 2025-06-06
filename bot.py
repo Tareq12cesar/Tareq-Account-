@@ -402,6 +402,16 @@ def handle_admin_text(message):
             btn = types.InlineKeyboardButton("📞 ارتباط با ادمین", url=ADMIN_CONTACT_LINK)
             markup.add(btn)
 
+            # لاگ قبل از ارسال به کانال
+            bot.send_message(ADMIN_ID, f"📤 در حال ارسال به کانال...\nvideo_id: {data.get('video')}\ncaption:\n{caption}")
+
+            # ارسال داخل try-except
+            try:
+                bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
+                bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n🆔 کد آگهی: {code}\n\nاین پیام رو برای ادمین بفرستید")
+            except Exception as e:
+                bot.send_message(ADMIN_ID, f"⛔ خطا در ارسال ویدیو به کانال:\n{e}")
+
             bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
             bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n🆔 کد آگهی: {code}\n\nاین پیام رو برای ادمین بفرستید")
 
