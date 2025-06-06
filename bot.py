@@ -394,17 +394,21 @@ def handle_admin_text(message):
             return
 
         if req_type == 'ad':
-            caption = f"📢 آگهی تایید شده:\n\n" \
-                      f"{data['info_text']}\n\n" \
-                      f"🆔 کد آگهی: {code}"
+    caption = f"📢 آگهی تایید شده:\n\n" \
+              f"{data['info_text']}\n\n" \
+              f"🆔 کد آگهی: {code}"
 
-            markup = types.InlineKeyboardMarkup()
+    markup = types.InlineKeyboardMarkup()
     btn = types.InlineKeyboardButton("📞 ارتباط با ادمین", url=ADMIN_CONTACT_LINK)
     markup.add(btn)
-    
-             bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
-             bot.send_message(user_id, f"✅ آگهی شما تایید و در کانال منتشر شد.\n\nکد آگهی: {code}\n\nاین پیام رو برای ادمین بفرستید")
-    
+
+    bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
+    bot.send_message(user_id, f"✅ آگهی شما تایید و در کانال منتشر شد.\n\n"
+                              f"کد آگهی: {code}\n\n"
+                              f"این پیام رو برای ادمین بفرستید")
+
+
+    # ادامه‌ی بخش مربوط به درخواست خرید
         elif req_type == 'buy':
             caption = f"🛒 درخواست خرید تایید شده:\n\n" \
                       f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
