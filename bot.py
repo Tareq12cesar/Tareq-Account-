@@ -394,11 +394,11 @@ def handle_admin_text(message):
             return
 
         if req_type == 'ad':
-           caption = f"📢 آگهی تأیید شده:\n\n" \
-              f"{data['info_text']}\n\n" \
-              f"🆔 کد آگهی: {code}"
+            caption = f"📢 آگهی تأیید شده:\n\n" \
+                      f"{data['info_text']}\n\n" \
+                      f"🆔 کد آگهی: {code}"
 
-    markup = types.InlineKeyboardMarkup()
+            markup = types.InlineKeyboardMarkup()
     btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
     markup.add(btn)
 
@@ -407,7 +407,10 @@ def handle_admin_text(message):
                               f"کد آگهی: {code}\n\n"
                               f"این پیام رو برای ادمین بفرستید")
 
-          elif req_type == 'buy':
+            bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
+            bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n🆔 کد آگهی: {code}\n\nاین پیام رو برای ادمین بفرستید")
+
+        elif req_type == 'buy':
             caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
                       f"🎯 اسکین‌های موردنظر: {data['skins']}\n" \
                       f"💰 بودجه: {data['max_budget']}\n" \
