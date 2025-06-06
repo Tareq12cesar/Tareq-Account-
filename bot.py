@@ -405,7 +405,7 @@ def handle_admin_text(message):
     bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
     bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n🆔 کد آگهی: {code}\n\nاین پیام رو برای ادمین بفرستید")
 
-    elif req_type == 'buy':
+      elif req_type == 'buy':
         caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
                   f"🎯 اسکین‌های موردنظر: {data['skins']}\n" \
                   f"💰 بودجه: {data['max_budget']}\n" \
