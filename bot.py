@@ -401,13 +401,13 @@ def handle_admin_text(message):
             bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
             bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n"
                                       f"کد آگهی: {code}\n\n"
-                                      f"این پیام رو برای ادمین بفرستید")
+                                      f"این پیام رو برای ادمین بفرست
 
         elif req_type == 'buy':
-            caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
-                      f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
-                      f"💰 بودجه: {data['max_budget']}\n" \
-                      f"🆔 کد درخواست: {code}"
+             caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
+                       f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
+                       f"💰 بودجه: {data['max_budget']}\n" \
+                       f"🆔 کد درخواست: {code}"
 
     markup = types.InlineKeyboardMarkup()
     btn = types.InlineKeyboardButton("📞 ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
