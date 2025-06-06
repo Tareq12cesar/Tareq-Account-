@@ -389,7 +389,7 @@ def handle_admin_text(message):
             bot.send_message(ADMIN_ID, "❌ اطلاعات کاربر یافت نشد.")
             return
 
-   if req_type == 'ad':
+    if req_type == 'ad':
             caption = f"📢 آگهی تأیید شده:\n\n" \
                       f"{data['info_text']}\n\n" \
                       f"🆔 کد آگهی: {code}"
