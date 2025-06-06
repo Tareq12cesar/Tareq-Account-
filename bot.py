@@ -411,14 +411,8 @@ def handle_admin_text(message):
                       f"💰 بودجه: {data['max_budget']}\n" \
                       f"🆔 کد درخواست: {code}"
 
-            markup = types.InlineKeyboardMarkup()
-            btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
-            markup.add(btn)
-
-            bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
-            bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n"
-                          f"کد آگهی: {code}\n\n"
-                          f"این پیام رو برای ادمین بفرستید")
+            bot.send_message(CHANNEL_USERNAME, caption)
+            bot.send_message(user_id, f"✅ درخواست خرید شما تأیید و در کانال منتشر شد.\n\nکد درخواست: {code}\n\nاین پیام رو برای ادمین بفرستید")
             
     elif ADMIN_ID in pending_rejections:
         reason = message.text.strip()
