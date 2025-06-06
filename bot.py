@@ -394,9 +394,9 @@ def handle_admin_text(message):
             return
 
         if req_type == 'ad':
-    caption = f"📢 آگهی تایید شده:\n\n" \
-              f"{data['info_text']}\n\n" \
-              f"🆔 کد آگهی: {code}"
+            caption = f"📢 آگهی تایید شده:\n\n" \
+                      f"{data['info_text']}\n\n" \
+                      f"🆔 کد آگهی: {code}"
 
     markup = types.InlineKeyboardMarkup()
     btn = types.InlineKeyboardButton("📞 ارتباط با ادمین", url=ADMIN_CONTACT_LINK)
