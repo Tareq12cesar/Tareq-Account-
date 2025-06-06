@@ -210,11 +210,11 @@ def calculate_price(message):
     text = message.text.strip()
 
     if text == "قیمت نهایی":
-        if message.chat.id not in user_data or not user_data[message.chat.id]:
+        data = user_data.get(message.chat.id, {})
+        if not any(isinstance(v, int) and v > 0 for v in data.values()):
             bot.send_message(message.chat.id, "❌ هنوز هیچ اسکینی ثبت نشده است.")
             send_skin_selection_menu(message.chat.id)
             return
-        
 
         fixed_prices = {
             "Supreme": 1200000,
@@ -224,8 +224,8 @@ def calculate_price(message):
 
         total_price = 0
         summary_lines = []
-        for skin_type, count in user_data[message.chat.id].items():
-            if count is None:
+        for skin_type, count in data.items():
+            if not isinstance(count, int):
                 continue
             if skin_type in fixed_prices:
                 price = fixed_prices[skin_type] * count
@@ -244,7 +244,7 @@ def calculate_price(message):
         user_data.pop(message.chat.id, None)
         send_menu(message.chat.id)
         return
-        
+
     valid_skin_types = ["Supreme", "Grand", "Exquisite", "Deluxe"]
     if text in valid_skin_types:
         if message.chat.id not in user_data:
@@ -267,7 +267,7 @@ def calculate_price(message):
 
 def get_skin_count(message, skin_type):
     if message.text.strip() == "بازگشت":
-        send_menu(message.chat.id)  # برگرد به منوی اصلی
+        send_menu(message.chat.id)
         return
 
     try:
@@ -276,14 +276,19 @@ def get_skin_count(message, skin_type):
             raise ValueError()
     except Exception:
         bot.send_message(message.chat.id, "❌ لطفاً فقط عدد مثبت وارد کنید. چندتا اسکین داری؟")
-    send_skin_selection_menu(message.chat.id)
-    return
+        send_skin_selection_menu(message.chat.id)
+        return
+
+    # اطمینان از اینکه user_data موجوده
+    if message.chat.id not in user_data:
+        user_data[message.chat.id] = {}
 
     user_data[message.chat.id][skin_type] = count
 
     bot.send_message(
         message.chat.id,
-        f"✅ تعداد اسکین‌های دسته {skin_type} ثبت شد.\n\nلطفاً دسته بعدی را انتخاب کنید یا «قیمت نهایی» را بزنید."
+        f"✅ تعداد اسکین‌های دسته {skin_type} ثبت شد.\n\n"
+        "لطفاً دسته بعدی را انتخاب کنید یا «قیمت نهایی» را بزنید."
     )
     send_skin_selection_menu(message.chat.id)
 
