@@ -4,10 +4,10 @@ from flask import Flask, request
 import threading
 
 # ======= تنظیمات اولیه =======
-BOT_TOKEN = '7933020801:AAFScmqUa1qcVljaYdfXJsqHDt7VDspL310'
+BOT_TOKEN = '7963209844:AAEg_Qj3gQgJL1pADhmcyyUFytPl_cgAir4'
 ADMIN_ID = 6697070308  # آیدی عددی ادمین
-CHANNEL_USERNAME = '@filmskina'  # یوزرنیم کانال
-CHANNEL_LINK = 'https://t.me/filmskina'
+CHANNEL_USERNAME = '@TareqMlbb'  # یوزرنیم کانال
+CHANNEL_LINK = 'https://t.me/TareqMlbb'
 
 # ======= تنظیمات عضویت اجباری =======
 REQUIRED_CHANNELS = [
