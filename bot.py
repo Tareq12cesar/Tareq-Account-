@@ -392,21 +392,18 @@ def handle_admin_text(message):
             return
 
         if req_type == 'ad':
-            caption = f"📢 آگهی تأیید شده:\n\n" \
-                      f"🧩 کالکشن: {data['collection']}\n" \
-                      f"🎮 اسکین‌های مهم: {data['key_skins']}\n" \
-                      f"📝 توضیحات: {data['description']}\n" \
-                      f"💰 قیمت: {data['price']} تومان\n" \
-                      f"🆔 کد آگهی: {code}"
+    caption = f"📢 آگهی تأیید شده:\n\n" \
+              f"{data['info_text']}\n\n" \
+              f"🆔 کد آگهی: {code}"
 
-            markup = types.InlineKeyboardMarkup()
-            btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
-            markup.add(btn)
+    markup = types.InlineKeyboardMarkup()
+    btn = types.InlineKeyboardButton("ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
+    markup.add(btn)
 
-            bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
-            bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n"
-                          f"کد آگهی: {code}\n\n"
-                          f"این پیام رو برای ادمین بفرستید")
+    bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
+    bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n"
+                              f"کد آگهی: {code}\n\n"
+                              f"این پیام رو برای ادمین بفرستید")
             
         elif req_type == 'buy':
             caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
