@@ -182,10 +182,10 @@ def handle_admin_response(call):
         return
 
     if action == 'approve':
-    bot.send_message(ADMIN_ID, "✅ لطفاً یک کد دلخواه برای این آگهی وارد کنید:")
-    pending_codes[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
-    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-    bot.register_next_step_handler(call.message, handle_admin_text)  # ⬅️ این خط رو اضافه کن
+        bot.send_message(ADMIN_ID, "✅ لطفاً یک کد دلخواه برای این آگهی وارد کنید:")
+        pending_codes[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+        bot.register_next_step_handler(call.message, handle_admin_text)  # ⬅️ این خط رو اضافه کن
     
     elif action == 'reject':
         bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد آگهی را بنویسید:")
