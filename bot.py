@@ -404,12 +404,12 @@ def handle_admin_text(message):
                                       f"این پیام رو برای ادمین بفرستید")
 
           elif req_type == 'buy':
-            caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
-                      f"🎯 اسکین‌های موردنظر: {data['skins']}\n" \
-                      f"💰 بودجه: {data['max_budget']}\n" \
-                      f"🆔 کد درخواست: {code}"
+    caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
+              f"🎯 اسکین‌های موردنظر: {data['requested_skins']}\n" \
+              f"💰 بودجه: {data['max_budget']}\n" \
+              f"🆔 کد درخواست: {code}"
 
-            markup = types.InlineKeyboardMarkup()
+    markup = types.InlineKeyboardMarkup()
     btn = types.InlineKeyboardButton("📞 ارتباط با ادمین", url=f"tg://user?id={ADMIN_ID}")
     markup.add(btn)
 
