@@ -4,7 +4,7 @@ from flask import Flask, request
 import threading
 
 # ======= تنظیمات اولیه =======
-BOT_TOKEN = '7963209844:AAEg_Qj3gQgJL1pADhmcyyUFytPl_cgAir4'
+BOT_TOKEN = '7963209844:AAHkOfoTNSJDIlTye0gyPomg0_S9QAIxHUs'
 ADMIN_ID = 6697070308  # آیدی عددی ادمین
 CHANNEL_USERNAME = '@TareqMlbb'  # یوزرنیم کانال
 CHANNEL_LINK = 'https://t.me/TareqMlbb'
