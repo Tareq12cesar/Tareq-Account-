@@ -15,6 +15,16 @@ REQUIRED_CHANNELS = [
     {'username': '@Mobile_Legend_ir', 'link': 'https://t.me/Mobile_Legend_ir', 'title': 'کانال دوم'},
     {'username': '@Shop_MLBB', 'link': 'https://t.me/Shop_MLBB', 'title': 'کانال سوم'},
 ]
+# ==== رفع ارور ChatBoost در نسخه قدیمی telebot ====
+class ChatBoost:
+    def __init__(self, boost_id=None, add_date=None, expiration_date=None):
+        self.boost_id = boost_id
+        self.add_date = add_date
+        self.expiration_date = expiration_date
+
+import telebot.types
+telebot.types.ChatBoost = ChatBoost
+
 
 bot = telebot.TeleBot(BOT_TOKEN)
 user_data = {}
