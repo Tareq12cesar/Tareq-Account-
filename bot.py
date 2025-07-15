@@ -22,9 +22,18 @@ class ChatBoost:
         self.add_date = add_date
         self.expiration_date = expiration_date
 
+    @classmethod
+    def de_json(cls, data):
+        if not data:
+            return None
+        return cls(
+            boost_id=data.get("boost_id"),
+            add_date=data.get("add_date"),
+            expiration_date=data.get("expiration_date")
+        )
+
 import telebot.types
 telebot.types.ChatBoost = ChatBoost
-
 
 bot = telebot.TeleBot(BOT_TOKEN)
 user_data = {}
