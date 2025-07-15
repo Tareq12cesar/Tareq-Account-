@@ -15,7 +15,8 @@ REQUIRED_CHANNELS = [
     {'username': '@Mobile_Legend_ir', 'link': 'https://t.me/Mobile_Legend_ir', 'title': 'کانال دوم'},
     {'username': '@Shop_MLBB', 'link': 'https://t.me/Shop_MLBB', 'title': 'کانال سوم'},
 ]
-# ==== رفع ارور ChatBoost در نسخه قدیمی telebot ====
+# ==== پچ کردن آبجکت‌های جدید تلگرام که باعث ارور می‌شن ====
+
 class ChatBoost:
     def __init__(self, boost_id=None, add_date=None, expiration_date=None):
         self.boost_id = boost_id
@@ -32,8 +33,30 @@ class ChatBoost:
             expiration_date=data.get("expiration_date")
         )
 
+class ChatBoostRemoved:
+    @classmethod
+    def de_json(cls, data):
+        return cls()
+
+class ChatBoostSource:
+    def __init__(self, source_type=None):
+        self.source_type = source_type
+
+    @classmethod
+    def de_json(cls, data):
+        if not data:
+            return None
+        return cls(source_type=data.get('source'))
+
+class ChatBoostSourcePremium(ChatBoostSource):
+    def __init__(self):
+        super().__init__('premium')
+
 import telebot.types
 telebot.types.ChatBoost = ChatBoost
+telebot.types.ChatBoostRemoved = ChatBoostRemoved
+telebot.types.ChatBoostSource = ChatBoostSource
+telebot.types.ChatBoostSourcePremium = ChatBoostSourcePremium
 
 bot = telebot.TeleBot(BOT_TOKEN)
 user_data = {}
