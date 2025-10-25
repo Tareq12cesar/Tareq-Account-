@@ -164,7 +164,7 @@ def get_collection(message):
     "لاکی باکس:\n"
     "استار سالانه:\n"
     "زودیاک:\n\n"
-    "اسکین هایی که تو لیست نیس و توضیح مختصر درباره اکانت:\n\n"
+    "اسکین هایی که تو لیست نیس و توضیح مختصر درباره اکانت+ریجن اکانت:\n\n"
     "قیمت:\n"
     "```"
     )
@@ -178,13 +178,13 @@ def get_form_text(message):
     if check_back(message): return
     user_data[message.chat.id]['info_text'] = message.text
 
-    bot.send_message(message.chat.id, "📹 لطفاً یک ویدئو از اکانت خود ارسال کنید:")
+    bot.send_message(message.chat.id, "📹 لطفاً یک ویدئو از اکانت خود ارسال کنید(فیلم اسکین ها از قسمت کالکشن، ریت هیروها و امبلم تو فیلم باشن):")
     bot.register_next_step_handler(message, get_video)
 
 def get_video(message):
     if check_back(message): return
     if message.content_type != 'video':
-        bot.send_message(message.chat.id, "❌ لطفاً فقط یک ویدئو ارسال کنید:")
+        bot.send_message(message.chat.id, "❌ لطفاً فقط یک ویدئو ارسال کنید(فیلم اسکین ها از قسمت کالکشن، ریت هیروها و امبلم تو فیلم باشن):")
         bot.register_next_step_handler(message, get_video)
         return
 
