@@ -260,9 +260,9 @@ def calculate_price(message):
             return
 
         fixed_prices = {
-            "Supreme": 1200000,
-            "Grand": 500000,
-            "Exquisite": 300000
+            "Supreme": 1500000,
+            "Grand": 700000,
+            "Exquisite": 400000
         }
 
         total_price = 0
