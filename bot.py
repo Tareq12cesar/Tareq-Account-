@@ -204,6 +204,8 @@ def get_video(message):
 def send_to_admin(user_id):
     data = user_data[user_id]
 
+    form_data = extract_form_data(data['info_text'])
+
     caption = (
         "📢 آگهی جدید برای بررسی:\n\n"
         f"{data['info_text']}\n\n"
@@ -238,7 +240,21 @@ def handle_admin_response(call):
         bot.send_message(ADMIN_ID, "❌ لطفاً دلیل رد آگهی را بنویسید:")
         pending_rejections[ADMIN_ID] = {'user_id': user_id, 'message_id': call.message.message_id}
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+import re
 
+def extract_form_data(text):
+    result = {}
+
+    fields = ["Supreme", "Grand", "Exquisite", "Deluxe", "قیمت"]
+
+    for field in fields:
+        m = re.search(rf"{field}\s*:\s*(\d+)", text)
+        if m:
+            result[field] = int(m.group(1))
+        else:
+            result[field] = 0
+
+    return result
 # ======= قیمت‌یاب اکانت =======
 from telebot import types
 
