@@ -7,7 +7,7 @@ import os
 import pymongo
 
 # ======= تنظیمات اولیه =======
-BOT_TOKEN = os.environ.get('BOT_TOKEN', '7963209844:AAHfKFJgRDpWWsoYNcR68CidWDy2lraVUuw')
+BOT_TOKEN = os.environ.get('BOT_TOKEN', '7963209844:AAFKHqhaVSnV4oRSCLOfIbfklc8eLjEdSGc')
 ADMIN_ID = 6697070308  # آیدی عددی ادمین
 CHANNEL_USERNAME = '@TareqMlbb'  # یوزرنیم کانال
 CHANNEL_LINK = 'https://t.me/TareqMlbb'
@@ -695,7 +695,7 @@ def handle_admin_text(message):
             bot.send_video(CHANNEL_USERNAME, data['video'], caption=caption, reply_markup=markup)
             bot.send_message(user_id, f"✅ آگهی شما تأیید و در کانال منتشر شد.\n\n"
                                       f"کد آگهی: {code}\n\n"
-                                      f"این پیام رو برای ادمین بفرستید")
+                                      f"این پیام رو به همراه شماره موبایل خود برای ادمین بفرستید")
 
         elif req_type == 'buy':
             caption = f"🛒 درخواست خرید تأیید شده:\n\n" \
@@ -710,7 +710,7 @@ def handle_admin_text(message):
             bot.send_message(CHANNEL_USERNAME, caption, reply_markup=markup)
             bot.send_message(user_id, f"✅ درخواست خرید شما تأیید و در کانال منتشر شد.\n\n"
                                       f"کد درخواست: {code}\n\n"
-                                      f"این پیام رو برای ادمین بفرستید")
+                                      f"این پیام رو به همراه شماره موبایل خود برای ادمین بفرستید")
     elif ADMIN_ID in pending_rejections:
         reason = message.text.strip()
         pending = pending_rejections.pop(ADMIN_ID)
